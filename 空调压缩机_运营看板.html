@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>空调压缩机 · 运营数据看板</title>
+<style>
+:root{
+  --bg:#f3f6fb; --card:#fff; --line:#e5eaf3;
+  --txt:#1c2433; --sub:#6b7688;
+  --blue:#2563eb; --green:#16a34a; --amber:#d97706; --red:#dc2626;
+  --blue-bg:#eff4ff; --green-bg:#ecfdf3; --amber-bg:#fef6e7; --red-bg:#fef2f2;
+  --radius:12px;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif; background:var(--bg); color:var(--txt); font-size:14px;}
+.wrap{max-width:1440px; margin:0 auto; padding:16px 20px 40px;}
+
+/* ===== Header ===== */
+header{background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; border-radius:var(--radius); padding:18px 22px; margin-bottom:18px;
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;}
+header h1{font-size:20px; font-weight:700; letter-spacing:.5px;}
+header .meta{font-size:12px; opacity:.85; line-height:1.7;}
+.tabs{display:flex; gap:8px; background:rgba(255,255,255,.14); padding:5px; border-radius:10px;}
+.tabs button{border:none; background:transparent; color:#fff; font-size:14px; font-weight:600; padding:8px 18px; border-radius:8px; cursor:pointer; opacity:.8;}
+.tabs button.active{background:#fff; color:var(--blue); opacity:1;}
+
+/* ===== Layout ===== */
+.page{display:none;}
+.page.active{display:block; animation:fade .25s ease;}
+@keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1;}}
+.grid{display:grid; gap:14px;}
+.sec-title{font-size:15px; font-weight:700; margin:22px 0 10px; display:flex; align-items:center; gap:8px;}
+.sec-title::before{content:""; width:4px; height:16px; background:var(--blue); border-radius:2px;}
+.sec-title .note{font-size:12px; font-weight:400; color:var(--sub);}
+
+/* ===== Card ===== */
+.card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; box-shadow:0 1px 3px rgba(16,24,40,.05);}
+.card h3{font-size:13px; color:var(--sub); margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;}
+.card h3 .src{font-size:11px; color:#9aa5b8; background:var(--bg); padding:2px 8px; border-radius:999px;}
+
+/* ===== KPI cards ===== */
+.kpi-grid{grid-template-columns:repeat(6,1fr);}
+.kpi .label{font-size:12px; color:var(--sub);}
+.kpi .value{font-size:24px; font-weight:700; margin-top:2px; white-space:nowrap;}
+.kpi .sub{font-size:12px; margin-top:5px;}
+.kpi .bar{height:6px; border-radius:99px; background:#e8edf5; margin-top:8px; overflow:hidden;}
+.kpi .bar i{display:block; height:100%; border-radius:99px;}
+@media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:700px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
+
+/* ===== Badges / status ===== */
+.badge{display:inline-block; padding:2px 9px; border-radius:999px; font-size:11px; font-weight:700;}
+.b-green{background:var(--green-bg); color:var(--green);}
+.b-amber{background:var(--amber-bg); color:var(--amber);}
+.b-red{background:var(--red-bg); color:var(--red);}
+.b-blue{background:var(--blue-bg); color:var(--blue);}
+.b-gray{background:#f0f2f7; color:#7a8699;}
+
+/* ===== Tables ===== */
+table{width:100%; border-collapse:collapse; font-size:12.5px;}
+th{color:var(--sub); font-weight:600; text-align:left; padding:7px 8px; border-bottom:1px solid var(--line); white-space:nowrap;}
+td{padding:7px 8px; border-bottom:1px solid #f0f3f9; white-space:nowrap;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#f8fafd;}
+/* 固定高度滚动表格（长清单模块：渠道库存等）：表头吸附 */
+.tbl-scroll{max-height:340px; overflow:auto; border:1px solid var(--line); border-radius:8px;}
+.tbl-scroll table{margin:0; min-width:100%;}
+.tbl-scroll thead th{position:sticky; top:0; background:#f4f7fc; z-index:2; box-shadow:0 1px 0 var(--line);}
+td.num, th.num{text-align:right; font-variant-numeric:tabular-nums;}
+.warn-cell{color:var(--red); font-weight:700;}
+.good-cell{color:var(--green); font-weight:700;}
+.small{font-size:11px; color:var(--sub);}
+
+/* ===== Stage cards (复盘阶段) ===== */
+.stage3{grid-template-columns:repeat(3,1fr);}
+.stage3 .stage-card{border-top:4px solid var(--blue);}
+.stage3 .stage-card:nth-child(2){border-top-color:var(--amber);}
+.stage3 .stage-card:nth-child(3){border-top-color:#10b981;}
+.stage-card h4{font-size:15px; margin-bottom:8px;}
+.stage-card .metrics{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:10px 0;}
+.stage-card .m b{font-size:16px; display:block;}
+.stage-card .m span{font-size:11px; color:var(--sub);}
+.stage-card .concl{font-size:12px; color:var(--sub); background:var(--bg); padding:8px 10px; border-radius:8px; line-height:1.6;}
+
+/* ===== Strategy card (月度策略卡) ===== */
+.card7{grid-template-columns:repeat(7,1fr);}
+@media(max-width:1100px){.card7{grid-template-columns:repeat(4,1fr);}}
+.mcard{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px; border-top:3px solid var(--blue);}
+.mcard.off{border-top-color:#94a3b8; opacity:.75;}
+.mcard .month{font-size:15px; font-weight:700; margin-bottom:6px;}
+.mcard .row{font-size:11.5px; color:var(--sub); line-height:1.7;}
+.mcard .row b{color:var(--txt); font-weight:600;}
+.mcard .kpi{margin-top:8px; font-size:12px; font-weight:700; color:var(--green);}
+.md-tabs{display:flex; gap:8px; margin-top:4px; flex-wrap:wrap;}
+.md-tab{border:1px solid var(--line); background:var(--bg); padding:7px 16px; border-radius:8px; font-size:13px; font-weight:600; color:var(--sub); cursor:pointer;}
+.md-tab.active{background:var(--blue); color:#fff; border-color:var(--blue);}
+.md-tab:hover:not(.active){border-color:var(--blue); color:var(--blue);}
+/* 深度下钻导航按钮 */
+.dd-nav{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; padding:10px; background:var(--card); border:1px solid var(--line); border-radius:12px; position:sticky; top:10px; z-index:6; box-shadow:0 2px 8px rgba(16,24,40,.06);}
+.dd-btn{border:1px solid var(--line); background:var(--bg); padding:6px 13px; border-radius:8px; font-size:12.5px; font-weight:600; color:var(--sub); cursor:pointer; transition:all .15s;}
+.dd-btn.active{background:var(--blue); color:#fff; border-color:var(--blue); box-shadow:0 1px 4px rgba(37,99,235,.3);}
+.dd-btn:hover:not(.active){border-color:var(--blue); color:var(--blue);}
+/* 深度下钻月份筛选 */
+.mm-nav{display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px; font-size:12.5px; color:var(--sub);}
+.mm-nav .mm-t{font-weight:700; color:var(--txt);}
+td.hl{background:#fff4d6; font-weight:700;}
+tr:hover td.hl{background:#ffe9b8;}
+
+/* ===== Charts ===== */
+.chart{width:100%; height:230px;}
+.chart svg{width:100%; height:100%;}
+.legend{display:flex; gap:14px; font-size:12px; color:var(--sub); margin-top:6px; flex-wrap:wrap;}
+.legend i{display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:4px; vertical-align:-1px;}
+
+/* ===== Monitor stage bar（全年 1-12 月视图）===== */
+.monthbar{display:grid; grid-template-columns:repeat(12,1fr); gap:5px; margin:10px 0 4px;}
+.monthbar .m{border-radius:9px; padding:7px 3px; text-align:center; min-height:74px; display:flex; flex-direction:column; justify-content:center; gap:2px; position:relative;}
+.monthbar .m .ml{font-size:11.5px; font-weight:700;}
+.monthbar .m .mp{font-size:10.5px; font-weight:600;}
+.monthbar .m .mw{font-size:9.5px; opacity:.8;}
+.monthbar .m .mt{font-size:9.5px; font-weight:700; opacity:.9;}
+.monthbar .m .tag{font-size:9px; padding:1px 5px; border-radius:99px; background:rgba(255,255,255,.65); font-weight:600; margin-top:1px;}
+.monthbar .m.acc{background:var(--blue-bg); color:var(--blue); border:1px solid #cfe0fd;}
+.monthbar .m.peak{background:#fde8d7; color:var(--amber); border:1px solid #fbd9b5;}
+.monthbar .m.down{background:#e4f0ea; color:#10b981; border:1px solid #cde6da;}
+.monthbar .m.low{background:#f0f2f7; color:#7a8699;}
+.monthbar .m.gap{border:1.5px dashed #c3cbdb; background:repeating-linear-gradient(45deg,#f8fafd,#f8fafd 6px,#eef1f7 6px,#eef1f7 12px); color:#9aa5b8;}
+.monthbar .m.cur{outline:2.5px solid var(--blue); outline-offset:-2.5px; box-shadow:0 2px 8px rgba(37,99,235,.35); transform:scale(1.05); z-index:1;}
+.monthbar .m.cur .ml{color:var(--blue);}
+.stage-legend{display:flex; gap:16px; font-size:12px; color:var(--sub); margin:6px 0 2px; flex-wrap:wrap;}
+.stage-legend i{display:inline-block; width:10px; height:10px; border-radius:2px; vertical-align:-1px; margin-right:3px;}
+
+/* ===== Alert / suggestion ===== */
+.alert-list{display:flex; flex-direction:column; gap:8px;}
+.alert-item{display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border-radius:10px; font-size:12.5px; line-height:1.6;}
+.alert-item.red{background:var(--red-bg); border:1px solid #f8d7da;}
+.alert-item.amber{background:var(--amber-bg); border:1px solid #fbe3c2;}
+.alert-item .rule{font-weight:700; white-space:nowrap;}
+.alert-item.red .rule{color:var(--red);}
+.alert-item.amber .rule{color:var(--amber);}
+.prio{font-weight:700; font-size:11px; padding:1px 7px; border-radius:6px;}
+.p0{background:var(--red-bg); color:var(--red);}
+.p1{background:var(--amber-bg); color:var(--amber);}
+.p2{background:var(--blue-bg); color:var(--blue);}
+
+/* ===== Module grid (监控七大模块) ===== */
+.mod-grid{grid-template-columns:repeat(3,1fr);}
+.mod-grid .card.full{grid-column:span 3;}
+@media(max-width:1100px){.mod-grid{grid-template-columns:1fr;} .mod-grid .card.full{grid-column:span 1;}}
+.ov-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
+@media(max-width:700px){.ov-grid{grid-template-columns:repeat(2,1fr);}}
+.ov-item{background:var(--bg); border-radius:8px; padding:8px 10px;}
+.ov-item b{font-size:16px; display:block; margin-top:2px;}
+.ov-item span{font-size:11px; color:var(--sub);}
+.ov-item .chg{font-size:11px; font-weight:600;}
+
+/* ===== Word chips ===== */
+.chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
+.chip{background:var(--blue-bg); color:var(--blue); font-size:12px; padding:4px 10px; border-radius:999px;}
+.chip .o{font-weight:700;}
+
+/* ===== Two col ===== */
+.two{grid-template-columns:1fr 1fr;}
+@media(max-width:1000px){.two{grid-template-columns:1fr;}}
+
+/* ===== Conclusion ===== */
+.concl-list{list-style:none; display:flex; flex-direction:column; gap:8px;}
+.concl-list li{background:var(--bg); border-radius:10px; padding:10px 14px; font-size:13px; line-height:1.7;}
+.concl-list li b{color:var(--blue);}
+
+footer{margin-top:26px; text-align:center; color:#9aa5b8; font-size:12px; line-height:1.8;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div>
+    <h1>❄️ 空调压缩机 · 运营数据看板</h1>
+    <div class="meta" id="hd-meta"></div>
+  </div>
+  <nav class="tabs">
+    <button data-tab="review" class="active">📊 复盘看板</button>
+    <button data-tab="monitor">📡 监控看板</button>
+    <button data-tab="rules">📋 规则监控</button>
+  </nav>
+</header>
+
+<!-- ================= 复盘看板 ================= -->
+<section id="page-review" class="page active">
+
+  <div class="grid kpi-grid" id="rv-kpi"></div>
+
+  <div class="sec-title">月度趋势（3-8月）<span class="note">数据源：领星活动报表 · BI 口径</span></div>
+  <div class="grid two">
+    <div class="card"><h3>花费 vs 销售（柱=花费 / 线=销售）</h3><div class="chart" id="rv-chart-spend"></div></div>
+    <div class="card"><h3>效率指标（线=ACoS·CVR / 线=CPC 右轴）</h3><div class="chart" id="rv-chart-eff"></div></div>
+  </div>
+
+  <div class="sec-title">分阶段复盘<span class="note">蓄水(3-5月) · 旺季(6-7月) · 回落(8月)｜FBA SKU 302→141 旺季消耗正常｜PO 1450→3231</span></div>
+  <div class="grid stage3" id="rv-stages"></div>
+
+  <div class="sec-title">策略分析（SP）<span class="note">翻新/全新 为 ASIN 层判定（sku_category_map + BI 品类列）</span></div>
+  <div class="grid two">
+    <div class="card"><h3>策略整体 ACoS</h3><div class="chart" id="rv-chart-strat"></div></div>
+    <div class="card"><h3>系列 × 策略 矩阵（ACoS %）</h3><div id="rv-series"></div>
+      <div class="small" style="margin-top:8px;line-height:1.7;">⚠️ 全新线 KW ACoS <b class="warn-cell">13.3%</b> 明显偏高（vs 翻新 KW 9.2%）——全新线关键词投放效率差，<b>避雷点</b>；PAT 6.9% 全场最优可加大；未匹配 14.4% 待补商品映射</div>
+    </div>
+  </div>
+
+  <div class="sec-title">SB/SD 广告（4-8月）<span class="note">数据源：用户上传</span></div>
+  <div class="grid two">
+    <div class="card"><h3>SB/SD 月度表现</h3><div id="rv-sbsd"></div></div>
+    <div class="card"><h3>结论</h3>
+      <div class="small" style="line-height:2;font-size:13px;color:var(--txt);">
+        ✅ SD ACoS 4-8% 极优（浏览再营销效率高）<br>
+        ⚠️ SB2 旺季 ACoS <b class="warn-cell">12-17% 偏高</b>——旺季注意控本<br>
+        ℹ️ SB/SD 合计仅占 SP 的 ~5%（$3,916 vs $71,206），为补充渠道
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-title">搜索词：机会词 与 否词候选<span class="note">机会词：出单未投 1,225 条 · 车型词优先纳入 KW ｜ 否词：花费≥$20 且 0 单（全期口径，词级报表无月度拆分）</span></div>
+  <div class="grid two">
+    <div class="card"><h3>TOP 出单词（机会词）</h3><div id="rv-words"></div></div>
+    <div class="card"><h3>否词候选（花费高 0 单 → 建议否词）</h3><div id="rv-negwords"></div></div>
+  </div>
+
+  <div class="sec-title">领星自动规则：需求 vs 执行（模块⑨）</div>
+  <div class="card">
+    <div id="rv-rules"></div>
+    <div class="small" style="margin-top:8px;line-height:1.8;">关键缺口：① <b class="warn-cell">广告位调优 0 条自动执行</b>（18 条需求全依赖人工）② 预算保护规则空白 ③ 进攻类规则空白（旺季提预算/提CPC缺失）→ 优化建议：核实广告位规则启用、补预算保护(P1)、补进攻类规则、阈值按盈亏平衡 ACoS 校准、规则台账双周复盘</div>
+  </div>
+
+  <div class="sec-title">策略卡（点击月份 → 下钻该月翻新/全新广告策略细化 + 库存 + 市场）</div>
+  <div class="grid card7" id="rv-mcards"></div>
+
+  <!-- 月度策略细化面板（策略卡点击展开） -->
+  <div class="card" id="month-detail" style="display:none;margin-top:14px;">
+    <h3>📅 月度策略细化 <span id="md-month" style="color:var(--blue)"></span>
+      <span class="src">策略卡点月切换 · 翻新/全新分模块下钻（广告策略 + 库存 + 市场）</span></h3>
+    <div class="md-tabs" id="md-tabs"></div>
+    <div id="md-body" style="margin-top:12px;"></div>
+  </div>
+
+  <div class="sec-title">深度下钻（复盘框架未呈现维度）<span class="note">analyze_deep.py 产出</span></div>
+  <div id="rv-drill"></div>
+
+  <div class="sec-title">复盘结论</div>
+  <div class="card"><ul class="concl-list" id="rv-concl"></ul></div>
+</section>
+
+<!-- ================= 监控看板 ================= -->
+<section id="page-monitor" class="page">
+
+  <div class="card">
+    <h3>赛季阶段定位 · 全年 1-12 月 <span class="src" id="mn-hd-pos"></span></h3>
+    <div class="monthbar" id="mn-monthbar"></div>
+    <div class="stage-legend">
+      <span><i style="background:#dbe7fd;"></i> 蓄水期 3-5月（S1-S13）ACoS≤8%</span>
+      <span><i style="background:#fde8d7;"></i> 旺季 6-7月（S14-S22）ACoS≤12%</span>
+      <span><i style="background:#e4f0ea;"></i> 回落期 8月（S23-S26）ACoS≤10%</span>
+      <span><i style="background:#fff;border:1px dashed #c3cbdb;"></i> 空位 1-2月 / 9-12月（无广告数据 · 来年迭代补齐）</span>
+    </div>
+    <div style="margin-top:10px;font-size:13px;line-height:1.8;" id="mn-stage-info"></div>
+  </div>
+
+  <div class="grid kpi-grid" id="mn-kpi" style="margin-top:14px;"></div>
+
+  <div class="card" style="margin-top:14px;"><h3>🎯 ACoS 打标标尺<span class="src">标准值 =（盈亏加权 + 上一年同期实际 ACoS）÷ 2</span></h3><div id="mn-acos-ruler"></div></div>
+
+  <div class="sec-title">近 8 周趋势<span class="note">S14 起进入旺季放量（预算×2 + 顶部溢价+）</span></div>
+  <div class="grid two">
+    <div class="card"><h3>花费 vs 销售（柱=花费 / 线=销售）</h3><div class="chart" id="mn-chart-spend"></div></div>
+    <div class="card"><h3>效率指标（线=ACoS·CVR / 线=CPC 右轴）</h3><div class="chart" id="mn-chart-eff"></div></div>
+  </div>
+
+  <div class="grid two" style="margin-top:14px;">
+    <div class="card"><h3>🚨 预警中心（规则引擎 R1-R15）</h3><div class="alert-list" id="mn-alerts"></div></div>
+    <div>
+      <div class="card" style="margin-bottom:14px;"><h3>✅ 本周优化建议（执行单）</h3><div class="alert-list" id="mn-sug"></div></div>
+      <div class="card"><h3>↩️ 上周建议验证</h3><div id="mn-verify"></div></div>
+    </div>
+  </div>
+
+  <div class="sec-title">七大监测模块<span class="note">数据源：BI MCP · 领星 · 市场MCP · 前台爬虫 · 运营导入</span></div>
+  <div class="grid mod-grid" id="mn-modules"></div>
+
+  <div class="sec-title">阶段累计看板<span class="note">累计 vs 阶段预算 / 目标 ACoS</span></div>
+  <div class="grid two" id="mn-cum"></div>
+</section>
+
+<!-- ================= 规则监控看板 ================= -->
+<section id="page-rules" class="page">
+  <div id="pg-rules"></div>
+</section>
+
+<footer>
+  空调压缩机 · 复盘看板（含深度下钻/月度策略细化）+ 监控看板 + 规则监控 V1.1 ｜ 数据文件：<b>看板/dashboard_data.js</b>（由 脚本/build_dashboard.py + weekly_monitor.py + <b>pull_rules_weekly.py</b>（领星规则周分析全品类→本品类切片）+ analyze_deep.py 自动更新）
+  <br>每周三：一键 <b>脚本/run_week.bat</b>（auto_weekly.py：库存兜底→广告拉取→周报预警+钉钉→规则切片→看板刷新，S27+ 含淡季段）→ 刷新本页即可 ｜ 机制：空压周度迭代与策略沉淀机制V1.0
+</footer>
+</div>
+
+<script src="dashboard_data.js"></script>
+<script>
+"use strict";
+/* ============================================================
+ * 空调压缩机 · 运营数据看板 渲染引擎（无外部依赖）
+ * ============================================================ */
+const D = window.DASHBOARD_DATA;
+const $ = s => document.querySelector(s);
+const fmt = n => (n==null?"—":Number(n).toLocaleString("en-US",{maximumFractionDigits:0}));
+const fmt1 = n => (n==null?"—":Number(n).toFixed(1));
+/* 赛季周 → 月维度标签（S16 → 6月week2） */
+const WEEK_MAP = {1:3,2:3,3:3,4:3,5:3,6:4,7:4,8:4,9:4,10:5,11:5,12:5,13:5,14:5,15:6,16:6,17:6,18:6,19:7,20:7,21:7,22:7,23:8,24:8,25:8,26:8};
+const WEEK_IN_M = {1:1,2:2,3:3,4:4,5:5,6:1,7:2,8:3,9:4,10:1,11:2,12:3,13:4,14:5,15:1,16:2,17:3,18:4,19:1,20:2,21:3,22:4,23:1,24:2,25:3,26:4};
+const weekLabel = w => { const m=WEEK_MAP[w]||6, i=WEEK_IN_M[w]||1; return m+"月week"+i; };
+/* 深度下钻月份筛选（all / 2026-XX） */
+let DD_MONTH = "all";
+const STATUS = { ok:["b-green","🟢"], warn:["b-amber","🟡"], bad:["b-red","🔴"] };
+function badge(txt,cls){ return `<span class="badge ${cls}">${txt}</span>`; }
+
+/* ---------- SVG 图表引擎 ---------- */
+function mkSvg(el,W,H){ el.innerHTML=""; const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`); el.appendChild(svg); return svg; }
+function axisRange(vals){ const mx=Math.max(...vals.map(v=>Number(v)||0)); return {min:0, max:(mx*1.15)||1}; }
+/* combo：柱状(左轴) + 折线(左/右轴) */
+function comboChart(el, labels, bars, lines, yFmt){
+  if(!labels || labels.length < 2){ el.innerHTML='<div class="small" style="padding:50px;text-align:center;">数据不足（需 ≥2 周快照，连续运行 weekly_monitor.py 积累）</div>'; return; }
+  const W=620,H=240,padL=52,padR=54,padT=16,padB=30;
+  const svg=mkSvg(el,W,H), iw=W-padL-padR, ih=H-padT-padB, n=labels.length;
+  const y1=axisRange([...bars.map(b=>b.values).flat(), ...lines.filter(l=>l.axis!=="r").map(l=>l.values).flat()]);
+  const y2=axisRange(lines.filter(l=>l.axis==="r").map(l=>l.values).flat());
+  const X=i=>padL+iw*i/(n-1||1), Y1=v=>padT+ih*(1-v/y1.max), Y2=v=>padT+ih*(1-v/y2.max);
+  const G="<g>";
+  for(let g=0;g<=4;g++){ const v=y1.max*g/4, y=Y1(v);
+    svg.innerHTML+=`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#eef1f7" stroke-width="1"/>`;
+    svg.innerHTML+=`<text x="${padL-6}" y="${y+4}" font-size="10" fill="#9aa5b8" text-anchor="end">${yFmt?yFmt(v):Math.round(v)}</text>`; }
+  lines.filter(l=>l.axis==="r").forEach(()=>{ for(let g=0;g<=2;g++){ const v=y2.max*g/2, y=Y2(v);
+    svg.innerHTML+=`<text x="${W-padR+6}" y="${y+4}" font-size="10" fill="#9aa5b8">${yFmt?yFmt(v):Math.round(v)}</text>`; } });
+  bars.forEach(b=>{ const bw=iw/n*0.55;
+    b.values.forEach((v,i)=>{ const h=ih*v/y1.max;
+      svg.innerHTML+=`<rect x="${padL+iw*i/n+bw/2}" y="${Y1(v)}" width="${bw}" height="${h}" rx="3" fill="${b.color||"#93c5fd"}" opacity=".85"><title>${labels[i]}: ${yFmt?yFmt(v):v}</title></rect>`; }); });
+  lines.forEach(l=>{ const pts=l.values.map((v,i)=>`${X(i)},${l.axis==="r"?Y2(v):Y1(v)}`).join(" ");
+    svg.innerHTML+=`<polyline points="${pts}" fill="none" stroke="${l.color}" stroke-width="2.5" stroke-linejoin="round"/>`;
+    l.values.forEach((v,i)=>{ svg.innerHTML+=`<circle cx="${X(i)}" cy="${l.axis==="r"?Y2(v):Y1(v)}" r="3" fill="${l.color}"><title>${labels[i]}: ${yFmt?yFmt(v):v}</title></circle>`; });
+    const li=l.values.length-1, lv=l.values[li];
+    svg.innerHTML+=`<text x="${Math.min(X(li)+4,W-padR-2)}" y="${(l.axis==="r"?Y2(lv):Y1(lv))-6}" font-size="10.5" font-weight="700" fill="${l.color}">${yFmt?yFmt(lv):lv}</text>`; });
+  labels.forEach((lb,i)=>{ svg.innerHTML+=`<text x="${padL+iw*i/n}" y="${H-10}" font-size="10.5" fill="#6b7688" text-anchor="middle">${lb}</text>`; });
+}
+/* 横向条形（ACoS 对比，带目标线） */
+function hbars(el, rows, target){
+  const W=620,H=rows.length*44+30, padL=96,padR=30,padT=12,padB=8;
+  const svg=mkSvg(el,W,H), iw=W-padL-padR, mx=Math.max(...rows.map(r=>r.value),target||0)*1.15;
+  rows.forEach((r,i)=>{ const y=padT+i*44, w=iw*r.value/mx;
+    svg.innerHTML+=`<text x="${padL-8}" y="${y+16}" font-size="11.5" fill="#1c2433" text-anchor="end">${r.label}</text>`;
+    svg.innerHTML+=`<rect x="${padL}" y="${y+4}" width="${w}" height="18" rx="5" fill="${r.color||"#60a5fa"}"><title>${r.label}: ${r.value}%</title></rect>`;
+    svg.innerHTML+=`<text x="${padL+w+6}" y="${y+18}" font-size="11" font-weight="700" fill="${r.color||"#2563eb"}">${r.value}%</text>`; });
+  if(target){ const tx=padL+iw*target/mx;
+    svg.innerHTML+=`<line x1="${tx}" y1="${padT-4}" x2="${tx}" y2="${H-padB}" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="5,4"/>`;
+    svg.innerHTML+=`<text x="${tx+4}" y="${padT+2}" font-size="10" fill="#dc2626">目标 ${target}%</text>`; }
+}
+
+/* ---------- 通用表渲染 ---------- */
+function renderTable(el, heads, rows, opts={}){
+  const th=heads.map(h=>`<th class="${h.num?"num":""}">${h.t}</th>`).join("");
+  const tr=rows.map(r=>{ const tds=heads.map(h=>{ let v=r[h.k]; let cls=h.num?"num":"";
+      if(h.clsFn){ const c=h.clsFn(r); if(c) cls+=c; }
+      if(h.fmt) v=h.fmt(v);
+      return `<td class="${cls}">${v??"—"}</td>`; }).join("");
+    return `<tr>${tds}</tr>`; }).join("");
+  el.innerHTML=`<table><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table>`;
+}
+
+/* ============================================================
+ * 复盘看板
+ * ============================================================ */
+function renderReview(){
+  const R=D.review, BE=D.meta.breakeven;
+  // KPI 卡
+  const kpis=[
+    {label:"总花费", value:"$"+fmt(R.summary.总花费), sub:"旺季 6 月峰值 $24,997", color:"var(--blue)"},
+    {label:"总销售", value:"$"+fmt(R.summary.总销售), sub:"4,936 单 · 客单价 $149", color:"var(--blue)"},
+    {label:"总订单", value:fmt(R.summary.总订单), sub:"出单词 1,538 · 机会词 1,225", color:"var(--blue)"},
+    {label:"整体 ACoS", value:R.summary.整体ACoS+"%", sub:badge("远低于盈亏线 "+BE["FBA翻新"]+"%","b-green"), color:"var(--green)"},
+    {label:"广告利润贡献", value:"$"+fmt(R.summary.广告利润贡献), sub:"销售×(1−ACoS)−花费", color:"var(--green)"},
+    {label:"盈亏平衡达标", value:"✅ 全品类健康", sub:"FBA翻新 20% / 全新 27.9%<br>VC翻新 22.8% / 全新 23.7%", color:"var(--green)"},
+  ];
+  $("#rv-kpi").innerHTML=kpis.map(k=>`<div class="card kpi"><div class="label">${k.label}</div><div class="value" style="color:${k.color}">${k.value}</div><div class="sub">${k.sub}</div></div>`).join("");
+
+  // 月度图表
+  const M=R.monthly, ml=M.map(m=>m.月份.slice(2));
+  comboChart($("#rv-chart-spend"), ml,
+    [{values:M.map(m=>m.花费), color:"#93c5fd"}],
+    [{values:M.map(m=>m.销售), color:"#2563eb", axis:"l"}],
+    v=>"$"+(v/1000).toFixed(0)+"K");
+  comboChart($("#rv-chart-eff"), ml,
+    [],
+    [{values:M.map(m=>m.ACoS), color:"#f59e0b", axis:"l"},
+     {values:M.map(m=>m.CVR), color:"#16a34a", axis:"l"},
+     {values:M.map(m=>m.CPC), color:"#dc2626", axis:"r"}],
+    v=>Number(v).toFixed(1));
+
+  // 分阶段
+  const st=R.stages;
+  const best={cvr:st.reduce((a,b)=>b.CVR>a.CVR?b:a).阶段, cpc:st.reduce((a,b)=>b.CPC<a.CPC?b:a).阶段, acos:st.reduce((a,b)=>b.ACoS<a.ACoS?b:a).阶段};
+  $("#rv-stages").innerHTML=st.map(s=>{ const tags=[];
+    if(s.阶段===best.cvr) tags.push(badge("转化最好 CVR "+s.CVR+"%","b-green"));
+    if(s.阶段===best.cpc) tags.push(badge("成本最低 CPC $"+s.CPC,"b-green"));
+    if(s.阶段===best.acos) tags.push(badge("综合最优 ACoS "+s.ACoS+"%","b-green"));
+    return `<div class="card stage-card"><h4>${s.阶段} ${tags.join(" ")}</h4>
+      <div class="metrics">
+        <div class="m"><span>花费</span><b>$${fmt(s.花费)}</b></div>
+        <div class="m"><span>销售</span><b>$${fmt(s.销售)}</b></div>
+        <div class="m"><span>订单</span><b>${fmt(s.订单)}</b></div>
+        <div class="m"><span>ACoS</span><b>${s.ACoS}%</b></div>
+        <div class="m"><span>CPC</span><b>$${s.CPC.toFixed(2)}</b></div>
+        <div class="m"><span>CVR</span><b>${s.CVR}%</b></div>
+      </div>
+      <div class="small" style="margin-bottom:6px;">FBA SKU ${s.FBA_SKU} ｜ PO SKU ${s.PO_SKU}</div>
+      <div class="concl">${s.结论}</div></div>`; }).join("");
+
+  // 策略
+  const S=R.strategy;
+  hbars($("#rv-chart-strat"), S.map(s=>({label:s.策略, value:Math.round(s.ACoS*10)/10, color: s.ACoS<8?"#16a34a":(s.ACoS<12?"#60a5fa":"#f59e0b")})), 12);
+  const s2d={翻新:"#f59e0b",全新:"#2563eb",混合:"#10b981",未匹配:"#94a3b8"};
+  const heads=[{t:"系列",k:"系列"},{t:"策略",k:"策略"},{t:"花费",k:"花费",num:true,fmt:v=>"$"+fmt(v)},{t:"销售",k:"销售",num:true,fmt:v=>"$"+fmt(v)},{t:"订单",k:"订单",num:true},{t:"ACoS",k:"ACoS",num:true,clsFn:r=>r.ACoS>13?" warn-cell":(r.ACoS<=8?" good-cell":"")}];
+  const rows=R.series_strategy.map(r=>({...r,系列:`<span style="color:${s2d[r.系列]||"#666"};font-weight:700">${r.系列}</span>`}));
+  renderTable($("#rv-series"), heads, rows);
+
+  // SB/SD
+  renderTable($("#rv-sbsd"),
+    [{t:"月份",k:"月份"},{t:"SP花费",k:"SP",num:true,fmt:v=>"$"+fmt(v)},{t:"SD花费",k:"SD",num:true,fmt:v=>"$"+fmt(v)},{t:"SD ACoS",k:"SD_ACoS",num:true,fmt:v=>v+"%",clsFn:r=>r.SD_ACoS<=8?" good-cell":""},{t:"SB2花费",k:"SB2",num:true,fmt:v=>"$"+fmt(v)},{t:"SB2 ACoS",k:"SB2_ACoS",num:true,fmt:v=>v+"%",clsFn:r=>r.SB2_ACoS>12?" warn-cell":""}],
+    R.sbsd);
+
+  // 机会词
+  renderTable($("#rv-words"),
+    [{t:"搜索词",k:"词"},{t:"订单",k:"订单",num:true},{t:"花费",k:"花费",num:true,fmt:v=>"$"+v.toFixed(2)}],
+    R.opportunity_words.map(w=>({...w,词:`<b>${w.词}</b>`})));
+  $("#rv-words").innerHTML+='<div class="chips"><span class="chip">机会词候选 <span class="o">1,225</span> 条</span><span class="chip">车型词优先</span><span class="chip">如 "2010 bmw 328i ac compressor" 4单</span></div>';
+
+  // 否词候选（总复盘词级洞察区呈现；全期口径）
+  const negW = (R.drill_down||{}).neg_words || [];
+  $("#rv-negwords").innerHTML = negW.length
+    ? tbl([{t:"关键词",k:"词"},{t:"花费",k:"花费",num:true,fmt:v=>"$"+v.toFixed(1)},{t:"点击",k:"点击",num:true},{t:"曝光",k:"曝光",num:true}], negW) +
+      '<div class="small" style="margin-top:6px;">建议：组内否词规则（14天花费&gt;5且0单）自动处理，或人工否词</div>'
+    : '<div class="small">✅ 无否词候选</div>';
+
+  // 规则矩阵
+  renderTable($("#rv-rules"),
+    [{t:"规则类别",k:"类别"},{t:"需求数",k:"需求",num:true},{t:"执行证据",k:"执行",clsFn:r=>r.执行.startsWith("❌")?" warn-cell":(r.执行.startsWith("✅")?" good-cell":"")}],
+    R.rules_matrix);
+
+  // 策略卡（月卡可点击 → 月度策略细化）
+  const monthKey = m => "2026-" + m.replace("月", "").padStart(2, "0");
+  const hasMd = m => m !== "9-2月" && D.review.drill_down && D.review.drill_down.month_detail && D.review.drill_down.month_detail[monthKey(m)];
+  $("#rv-mcards").innerHTML=R.strategy_card.map(c=>`<div class="mcard ${c.月==="9-2月"?"off":""}" ${hasMd(c.月)?`style="cursor:pointer" onclick="showMonth('${monthKey(c.月)}','${c.月}')" title="点击下钻 ${c.月} 翻新/全新策略细化"`:""}>
+    <div class="month">${c.月}${hasMd(c.月)?' <span class="badge b-blue">下钻</span>':''}</div>
+    <div class="row"><b>广告：</b>${c.广告}</div>
+    <div class="row"><b>库存：</b>${c.库存}</div>
+    <div class="kpi">🎯 ${c.KPI}</div></div>`).join("");
+
+  // 结论
+  $("#rv-concl").innerHTML=R.conclusions.map(c=>`<li>${c}</li>`).join("");
+}
+
+/* ============================================================
+ * 监控看板
+ * ============================================================ */
+function renderMonitor(){
+  const M=D.monitor, T=M.kpi.targets, K=M.kpi;
+  // 头部
+  $("#hd-meta").innerHTML=`${D.meta.season} ｜ ${D.meta.scope} ｜ 数据更新 ${D.meta.updated}`;
+  $("#mn-hd-pos").textContent=`${M.week_label||weekLabel(M.week)}（ISO ${M.iso}）${M.period} · ${M.stage}`;
+
+  // 全年 1-12 月阶段定位（3-8月已监控，1-2月/9-12月留空位，来年迭代补齐）
+  const DEFAULT_CAL=[
+    {月:1,阶段:"淡季",状态:"空位",目标:"ACoS≤15%",月内周:"—"},
+    {月:2,阶段:"淡季",状态:"空位",目标:"ACoS≤15%",月内周:"—"},
+    {月:3,阶段:"蓄水期",状态:"已监控",目标:"ACoS≤8%",月内周:"week1-5"},
+    {月:4,阶段:"蓄水期",状态:"已监控",目标:"ACoS≤8%",月内周:"week1-4"},
+    {月:5,阶段:"蓄水期",状态:"已监控",目标:"ACoS≤8%",月内周:"week1-5"},
+    {月:6,阶段:"旺季",状态:"已监控",目标:"ACoS≤12%",月内周:"week1-4"},
+    {月:7,阶段:"旺季",状态:"已监控",目标:"ACoS≤12%",月内周:"week1-4"},
+    {月:8,阶段:"回落期",状态:"已监控",目标:"ACoS≤10%",月内周:"week1-4"},
+    {月:9,阶段:"淡季",状态:"空位",目标:"ACoS≤15%",月内周:"—"},
+    {月:10,阶段:"淡季",状态:"空位",目标:"ACoS≤15%",月内周:"—"},
+    {月:11,阶段:"淡季",状态:"空位",目标:"ACoS≤15%",月内周:"—"},
+    {月:12,阶段:"淡季",状态:"空位",目标:"ACoS≤15%",月内周:"—"}
+  ];
+  const cal = M.stage_calendar || DEFAULT_CAL;
+  const curMonth = M.month || 6;
+  const curLabel = M.week_label || weekLabel(M.week);
+  const clsOf = p => p==="蓄水期"?"acc":(p==="旺季"?"peak":(p==="回落期"?"down":"low"));
+  $("#mn-monthbar").innerHTML = cal.map(c=>{
+    const wk = c.月内周 || c.赛季周 || "";
+    const body = c.状态==="空位"
+      ? `<div class="mp">${c.阶段}</div><span class="tag">空位 · 来年补齐</span>`
+      : `<div class="mp">${c.阶段}</div><div class="mw">${wk}</div><div class="mt">${c.目标}</div>`;
+    const tip = c.状态==="空位" ? `${c.月}月 ${c.阶段}（无广告数据，来年迭代补齐）` : `${c.月}月 ${c.阶段}（${wk} · ${c.目标}）`;
+    return `<div class="m ${c.状态==="空位"?"gap":clsOf(c.阶段)} ${c.月===curMonth?"cur":""}" title="${tip}"><div class="ml">${c.月}月</div>${body}</div>`;
+  }).join("");
+  const gapTxt = "空位：1-2月、9-12月暂无广告数据，后续按月迭代补齐";
+  $("#mn-stage-info").innerHTML=`<b style="color:var(--blue)">当前：${M.stage}（${curLabel} · ${curMonth}月）</b> ｜ 全年进度 <b>${curMonth}/12</b> ｜ 策略卡动作：<b>${M.stage_action}</b> ｜ 距旺季结束（6月week4）还剩 <b>${Math.max(0,22-M.week)}</b> 周 ｜ 距回落收缩（8月week1）还剩 <b>${Math.max(0,23-M.week)}</b> 周 ｜ 会员日窗口以官方日期锁定后补监测 ｜ <span style="color:#9aa5b8">${gapTxt}</span>`;
+
+  // KPI 卡
+  const mkKpi=(label,value,sub,color,bar)=>`<div class="card kpi"><div class="label">${label}</div><div class="value" style="color:${color}">${value}</div><div class="sub">${sub}</div>${bar||""}</div>`;
+  const hasBudget = !!K.预算;
+  const spendOk = !hasBudget || K.花费 <= K.预算;
+  const spendBar = hasBudget ? `<div class="bar"><i style="width:${Math.min(100,K.花费/K.预算*100)}%;background:${spendOk?"var(--green)":"var(--red)"}"></i></div>` : "";
+  // ACoS 卡：三态（阶段目标 → 打标标准值 → 红）
+  const stdA = K.标准ACoS != null ? K.标准ACoS : T.ACoS;
+  const acosOk = K.ACoS <= T.ACoS;
+  const acosOverStd = K.ACoS > stdA;
+  const acosBadge = acosOk ? badge(" 达标","b-green") : (acosOverStd ? badge(" 超标准值","b-red") : badge(" 超目标","b-amber"));
+  const acosSub = `目标 ≤${T.ACoS}% · 标准值 ${stdA}% · ${K.mom.ACoS}` + acosBadge;
+  $("#mn-kpi").innerHTML=
+    mkKpi("本周花费", "$"+fmt(K.花费), `预算 ${hasBudget?"$"+fmt(K.预算):"—"} · 环比 ${K.mom.花费}`+badge(spendOk?" 预算内":" 超预算",spendOk?"b-green":"b-red"), "var(--blue)", spendBar)+
+    mkKpi("广告销售", "$"+fmt(K.销售), `订单 ${fmt(K.订单)} · 环比 ${K.mom.销售}`, "var(--blue)")+
+    mkKpi("ACoS", K.ACoS+"%", acosSub, acosOk?"var(--green)":(acosOverStd?"var(--red)":"var(--amber)"))+
+    mkKpi("CPC", "$"+K.CPC.toFixed(2), `阈值 $${T.CPC} · ${K.mom.CPC}`+badge(K.CPC<=T.CPC?" 正常":" 超阈值",K.CPC<=T.CPC?"b-green":"b-amber"), K.CPC<=T.CPC?"var(--green)":"var(--amber)")+
+    mkKpi("CVR", K.CVR+"%", `目标 ≥${T.CVR}% · ${K.mom.CVR}`+badge(K.CVR>=T.CVR?" 达标":" 偏低",K.CVR>=T.CVR?"b-green":"b-red"), K.CVR>=T.CVR?"var(--green)":"var(--red)")+
+    mkKpi("客单价", "$"+fmt(K.客单价), "广告利润贡献 $"+fmt(K.利润贡献), "var(--blue)")+
+    mkKpi("广告利润贡献", "$"+fmt(K.利润贡献), "销售×(1−ACoS)−花费", K.利润贡献>0?"var(--green)":"var(--red)");
+
+  // ACoS 打标标尺（空压ACoS标准值打标机制V1.0）
+  const BEw = K.盈亏加权ACoS || 22.8;
+  const rulerMax = Math.max(BEw*1.15, K.ACoS*1.2, 25);
+  const pos = v => (v/rulerMax*100).toFixed(1);
+  const mark = (v,c,label) => `<div style="position:absolute;left:${pos(v)}%;top:0;transform:translateX(-50%);text-align:center;">
+    <div style="width:2px;height:26px;background:${c};margin:0 auto;"></div>
+    <div style="font-size:10px;color:${c};font-weight:700;white-space:nowrap;">${label} ${v}%</div></div>`;
+  let rm = `<div style="position:relative;height:66px;">
+    <div style="position:absolute;left:0;right:0;top:8px;height:16px;background:linear-gradient(90deg,#ecfdf3 0%,#fef6e7 ${pos(T.ACoS)},#fef2f2 ${pos(BEw)},#dc2626 ${Math.min(100,pos(BEw)+6)}%);border-radius:8px;opacity:.9;"></div>
+    <div style="position:absolute;top:0;font-size:11px;color:var(--sub);">0%</div>
+    <div style="position:absolute;right:0;top:0;font-size:11px;color:var(--sub);">${rulerMax.toFixed(0)}%</div>`;
+  rm += mark(T.ACoS, "#16a34a", "目标");
+  rm += mark(stdA, "#d97706", "标准值");
+  rm += mark(BEw, "#dc2626", "盈亏线");
+  rm += `<div style="position:absolute;left:${pos(K.ACoS)}%;top:-4px;transform:translateX(-50%);">
+    <div style="width:15px;height:15px;background:#2563eb;border:2.5px solid #fff;border-radius:50%;box-shadow:0 1px 5px rgba(0,0,0,.35);"></div>
+    <div style="font-size:12px;font-weight:700;color:#2563eb;margin-top:2px;white-space:nowrap;">本周 ${K.ACoS}%</div></div></div>`;
+  rm += `<div class="small" style="margin-top:2px;line-height:1.8;">打标标准值 = 盈亏加权(${BEw}%) 与上一年同期实际 ACoS（${K.上年同期ACoS!=null?K.上年同期ACoS+"%":"—"}）的中点 ｜ ACoS 超标准值触发 R16 预警 + S15 复盘框架建议</div>`;
+  $("#mn-acos-ruler").innerHTML = rm;
+
+  // 近8周趋势
+  const S8=M.series, sl=S8.map(s=>s.label||weekLabel(s.week));
+  comboChart($("#mn-chart-spend"), sl,
+    [{values:S8.map(s=>s.花费), color:"#93c5fd"}],
+    [{values:S8.map(s=>s.销售), color:"#2563eb", axis:"l"}],
+    v=>"$"+(v/1000).toFixed(0)+"K");
+  comboChart($("#mn-chart-eff"), sl,
+    [],
+    [{values:S8.map(s=>s.ACoS), color:"#f59e0b", axis:"l"},
+     {values:S8.map(s=>s.CVR), color:"#16a34a", axis:"l"},
+     {values:S8.map(s=>s.CPC), color:"#dc2626", axis:"r"}],
+    v=>Number(v).toFixed(1));
+
+  // 预警
+  const reds=M.alerts.filter(a=>a.级别==="🔴"), ambers=M.alerts.filter(a=>a.级别==="🟡");
+  $("#mn-alerts").innerHTML=[...reds,...ambers].map(a=>`<div class="alert-item ${a.级别==="🔴"?"red":"amber"}"><span class="rule">${a.规则}</span><span>${a.明细}</span></div>`).join("")
+    || '<div class="small">✅ 本周无预警触发</div>';
+
+  // 建议
+  $("#mn-sug").innerHTML=M.suggestions.map(s=>`<div class="alert-item amber"><span class="prio ${s.优先级==="P0"?"p0":(s.优先级==="P1"?"p1":"p2")}">${s.优先级}</span><span>${s.建议}</span></div>`).join("");
+
+  // 上周验证
+  renderTable($("#mn-verify"),
+    [{t:"上周建议",k:"建议"},{t:"执行",k:"执行"},{t:"效果",k:"效果"},{t:"结论",k:"结论",clsFn:r=>r.结论.startsWith("✅")?" good-cell":""}],
+    M.last_week_verify.map(v=>({...v,结论:badge(v.结论,"b-green")})));
+
+  // 七大模块
+  const A=M.ad;
+  const adModule=`
+    <div class="card full"><h3>① 广告（领星）<span class="src">领星 MCP/OpenAPI</span></h3>
+      <div class="grid two">
+        <div><h3 style="margin:4px 0 8px;">分策略</h3>${tbl([{t:"策略",k:"策略"},{t:"花费",k:"花费",num:true,fmt:v=>"$"+fmt(v)},{t:"销售",k:"销售",num:true,fmt:v=>"$"+fmt(v)},{t:"订单",k:"订单",num:true},{t:"ACoS",k:"ACoS",num:true,fmt:v=>v+"%",clsFn:r=>r.ACoS>12?" warn-cell":""}],A.strategies)}</div>
+        <div><h3 style="margin:4px 0 8px;">广告位</h3>${tbl([{t:"广告位",k:"广告位"},{t:"花费占比",k:"花费占比",num:true,fmt:v=>v+"%"},{t:"ACoS",k:"ACoS",num:true,fmt:v=>v+"%"},{t:"环比",k:"环比"}],A.placement)}</div>
+      </div>
+      <div class="grid two" style="margin-top:10px;">
+        <div><h3 style="margin:4px 0 8px;">SB/SD 补充渠道</h3>${tbl([{t:"类型",k:"类型"},{t:"花费",k:"花费",num:true,fmt:v=>"$"+fmt(v)},{t:"销售",k:"销售",num:true,fmt:v=>"$"+fmt(v)},{t:"ACoS",k:"ACoS",num:true,fmt:v=>v+"%",clsFn:r=>r.ACoS>15?" warn-cell":""}],A.sbsd)}</div>
+        <div><h3 style="margin:4px 0 8px;">词级动态</h3>
+          <div class="chips">
+            <span class="chip">机会词 <span class="o">${A.words.机会词}</span></span>
+            <span class="chip">否词候选 <span class="o">${A.words.否词候选}</span></span>
+            <span class="chip">新增投放词 <span class="o">${A.words.新增投放词}</span></span>
+            <span class="chip" style="background:${A.words.自动调优执行===0?"var(--red-bg)":"var(--green-bg)"};color:${A.words.自动调优执行===0?"var(--red)":"var(--green)"}">广告位自动调优 <span class="o">${A.words.自动调优执行}</span> 条</span>
+          </div>
+          <div class="small" style="margin-top:8px;">⚠️ 低效活动：${A.loweff_campaigns.join("；")||"无"}（ACoS>平衡线×1.2）</div>
+        </div>
+      </div>
+    </div>`;
+  const ovModule=`<div class="card"><h3>② 经营总览<span class="src">BI MCP</span></h3><div class="ov-grid">${M.overview.map(o=>`<div class="ov-item"><span>${o.指标}</span><b>${o.值}</b><span class="chg" style="color:${o.环比.startsWith("-")?"var(--red)":"var(--green)"}">${o.环比} <span style="color:var(--sub);font-weight:400">${o.说明}</span></span></div>`).join("")}</div></div>`;
+  const invRows=M.inventory.fba.concat(M.inventory.df,M.inventory.po.map(p=>({...p,渠道:"PO",状态:"断货"})));
+  const invCnt=invRows.length, invOOS=invRows.filter(r=>r.状态==="断货").length, invPrep=invRows.filter(r=>r.状态==="备货").length;
+  const invRank={"断货":0,"备货":1,"正常":2};
+  invRows.sort((a,b)=>(invRank[a.状态]??3)-(invRank[b.状态]??3));
+  const invMeta=(M.inventory.meta||{});
+  const invSnap=invMeta["FBA快照日期"]?`｜快照 ${invMeta["FBA快照日期"]}${invMeta.fallback?`（${invMeta["数据月"]}月文件未到，沿用${String(invMeta["FBA文件"]||"").match(/(?:空压)?(\d{1,2})月/)?.[1]||"—"}月）`:""}（月度快照·非实时）`:"";
+  const invModule=`<div class="card"><h3>③ 渠道库存<span class="src">BI MCP</span></h3>
+    <div class="small" style="margin:4px 0 8px;">共 <b>${fmt(invCnt)}</b> 个 SKU ｜ ${badge("🔴 断货 "+fmt(invOOS),invOOS?"b-red":"b-green")} ${invPrep?badge("🟡 备货 "+fmt(invPrep),"b-amber"):""} ${badge("🟢 正常 "+fmt(invCnt-invOOS-invPrep),"b-green")}${invSnap} ｜ 断货排前，固定窗口内滚动查看（表头吸附）</div>
+    <div class="tbl-scroll">${tbl([{t:"渠道",k:"渠道"},{t:"SKU",k:"SKU"},{t:"可售",k:"可售",num:true},{t:"状态",k:"状态",clsFn:r=>r.状态==="断货"?" warn-cell":(r.状态==="备货"?"":""),fmt:v=>v==="断货"?"🔴 断货":(v==="备货"?"🟡 备货":v)}],invRows)}</div>
+    <div class="small" style="margin-top:8px;">断货=广告白烧钱（复盘：断货 40 SKU）→ 暂停对应活动广告 + 补货排期</div></div>`;
+  const mkt=M.market;
+  const mktSigTxt = mkt.信号 || "";
+  const mktSignal = mktSigTxt.includes("下滑")?'<span class="badge b-red">🔴 淡季切换触发</span>':(mktSigTxt.includes("上升")?'<span class="badge b-amber">🟡 提前放量</span>':'<span class="badge b-green">🟢 平稳</span>');
+  // ④ 市场：Sorftime 真实搜索量优先
+  const SF=M.sorftime;
+  const sfKw = (SF && SF.keywords && SF.keywords.length) ? SF.keywords[0] : null;
+  const sfCat = (SF && SF.category && SF.category.sales_trend) ? SF.category.sales_trend : [];
+  const sfCatLast = sfCat.length ? sfCat[sfCat.length-1].split("=")[1] : "—";
+  const sfCatPeak = sfCat.length ? sfCat.reduce((a,b)=>(parseInt(b.split("=")[1])||0)>(parseInt(a.split("=")[1])||0)?b:a).replace("=","月=") : "—";
+  const mktModule = (SF && sfKw) ? `<div class="card"><h3>④ 市场<span class="src">Sorftime MCP · ${SF.date||""}</span></h3>
+    <div class="ov-grid">
+      <div class="ov-item"><span>${sfKw.keyword||"ac compressor"} 周搜索量</span><b>${fmt(sfKw.weekly_search_volume)}</b><span class="chg" style="color:var(--green)">推荐竞价 $${sfKw.recommended_cpc_bid||"—"}</span></div>
+      <div class="ov-item"><span>月搜索量</span><b>${fmt(sfKw.monthly_search_volume)}</b><span class="chg" style="color:var(--sub)">旺季 ${sfKw.search_volume_peak_season||"—"}</span></div>
+      <div class="ov-item"><span>类目月销量（最新）</span><b>${sfCatLast}</b><span class="chg" style="color:var(--green)">AC Compressors</span></div>
+      <div class="ov-item"><span>类目峰值月</span><b style="font-size:14px">${sfCatPeak}</b><span class="chg" style="color:var(--sub)">市场旺季锚点</span></div>
+    </div>
+    <div style="margin-top:10px;font-size:12px;color:var(--sub);line-height:1.8;">类目月销量趋势：${sfCat.slice(-6).join(" → ")}</div>
+    <div class="small" style="margin-top:6px;">Sorftime 推荐竞价 $${sfKw.recommended_cpc_bid||"—"} 可作 CPC 上限外部校准（对比阈值 $0.65）；R7/R8 淡旺季切换可用真实搜索量环比触发</div></div>`
+  : `<div class="card"><h3>④ 市场<span class="src">市场MCP + BI</span></h3>
+    <div class="ov-grid">
+      <div class="ov-item"><span>搜索指数</span><b>${fmt(mkt.搜索指数)}</b><span class="chg" style="color:var(--green)">${mkt.环比||"—"}</span></div>
+      <div class="ov-item"><span>上周</span><b>${fmt(mkt.搜索指数上周)}</b></div>
+      <div class="ov-item"><span>类目流量</span><b>${fmt(mkt.类目流量)}</b></div>
+      <div class="ov-item"><span>类目销量</span><b>${fmt(mkt.类目销量)}</b></div>
+    </div>
+    <div style="margin-top:10px;font-size:12.5px;color:var(--sub);">市占 <b style="color:var(--txt)">${mkt.市占||"—"}${mkt.市占?"%":""}</b> ｜ 信号：${mktSignal} ${mkt.信号||"—（缺对比数据）"}</div>
+    <div class="small" style="margin-top:6px;">触发规则：连续2周 ↓≥15% → 淡季切换（竞价降20%/预算降30%）；连续2周 ↑≥15% → 提前放量</div></div>`;
+  // ⑤ 竞品：Sorftime 真实竞品优先
+  const sfComp = (SF && SF.competitors && SF.competitors.length) ? SF.competitors : null;
+  const ovPrice = M.overview.find(o=>o.指标==="页面价");
+  const compModule = sfComp ? `<div class="card"><h3>⑤ 竞品<span class="src">Sorftime MCP · 真实爬虫</span></h3>
+    ${tbl([{t:"ASIN",k:"asin"},{t:"品牌",k:"brand"},{t:"价格",k:"price",num:true,fmt:v=>"$"+v},{t:"月销",k:"monthly_sales_volume",num:true,fmt:fmt},{t:"评分",k:"star_rating",num:true,clsFn:r=>r.star_rating<4?" warn-cell":""},{t:"评论数",k:"review_count",num:true,fmt:fmt},{t:"配送",k:"delivery_type"}],sfComp.slice(0,8))}
+    <div class="small" style="margin-top:8px;">自身页面价 $${ovPrice?ovPrice.值:"—"} ｜ 竞品价格带参考：$ ${sfComp.map(c=>c.price).filter(Boolean).sort((a,b)=>a-b).join(" / ")} ｜ 竞品降价≥5% → 核对自身价格竞争力（价格带差10pp → 盈亏线 20%↔27.9%）</div></div>`
+  : `<div class="card"><h3>⑤ 竞品<span class="src">市场MCP + 前台爬虫</span></h3>
+    ${tbl([{t:"ASIN",k:"ASIN"},{t:"排名",k:"排名",num:true},{t:"页面价",k:"页面价",num:true,fmt:v=>"$"+v},{t:"上周",k:"页面价上周",num:true,fmt:v=>"$"+v},{t:"促销",k:"促销"},{t:"预警",k:"预警",clsFn:r=>r.预警?" warn-cell":"",fmt:v=>v||"—"}],M.competitors)}
+    <div class="small" style="margin-top:8px;">竞品页面价 ↓≥5% → 核对自身价格竞争力（价格带差10pp → 盈亏线 20%↔27.9%）</div></div>`;
+  // ⑥ 变体健康：Sorftime 竞品变体/差评洞察优先（有数据时）
+  const sfVar = (SF && SF.variant_insights && SF.variant_insights.length && SF.variant_insights[0].topics) ? SF.variant_insights : null;
+  const varModule = sfVar ? `<div class="card"><h3>⑥ 变体健康 · 竞品洞察<span class="src">Sorftime MCP · Customers Say</span></h3>
+    ${tbl([{t:"竞品ASIN",k:"asin"},{t:"变体数",k:"variation_total",num:true},{t:"差评主题",k:"topics",fmt:(v,r)=>(r.topics||[]).map(t=>t.keyword+(t.negative?` (负${t.negative})`:"")).slice(0,3).join("、")||"—"},{t:"预警",k:"warn",fmt:(v,r)=>{const b=(r.topics||[]).filter(t=>t.negative&&t.negative>=3);return b.length?badge("差评集中 🔴","b-red"):"—";}}],sfVar.map(v=>({...v,warn:""})))}
+    <div class="small" style="margin-top:8px;">竞品差评主题=转化机会（listing 文案/卖点差异化）；自家变体监控见下表 ↓</div></div>`
+  : `<div class="card"><h3>⑥ 变体健康<span class="src">${SF?"Sorftime 待升级（试用额度耗尽）":"亚马逊前台爬虫"}</span></h3>
+    ${tbl([{t:"ASIN",k:"ASIN"},{t:"评分",k:"评分",num:true,clsFn:r=>r.评分<4?" warn-cell":""},{t:"周新增差评",k:"周新增差评",num:true},{t:"类目排名",k:"排名",num:true},{t:"预警",k:"预警",clsFn:r=>r.预警?" warn-cell":"",fmt:v=>v||"—"}],M.variants)}
+    <div class="small" style="margin-top:8px;">评分&lt;4.0 或 周新增差评≥3 → 🔴 页面问题优先处理，再调广告（复盘：CVR 旺季下滑含页面因素）${SF?"｜Sorftime 竞品变体/差评洞察（product_variations / customers_say）工具已就绪，升级套餐后由 sorftime_monitor.py --asins 拉取":""}</div></div>`;
+  const promoModule=`<div class="card"><h3>⑦ 促销情况<span class="src">BI损益费用 + 运营导入</span></h3>
+    ${tbl([{t:"活动",k:"活动"},{t:"时间",k:"开始",fmt:(v,r)=>r.开始+"~"+r.结束},{t:"力度",k:"力度"},{t:"单量",k:"单量",num:true},{t:"费用",k:"费用",num:true,fmt:v=>"$"+fmt(v)}],M.promo)}
+    <div class="small" style="margin-top:8px;">口径：促销单量计入广告销售但不计广告效率（ACoS 豁免）｜大促后一周 ACoS &gt; 大促周 → R14 收缩 50%</div></div>`;
+  $("#mn-modules").innerHTML=adModule+ovModule+invModule+mktModule+compModule+varModule+promoModule;
+
+  // 阶段累计
+  const cumEntries = Object.entries(M.stage_cum||{});
+  $("#mn-cum").innerHTML = cumEntries.length ? cumEntries.map(([name,c])=>{
+    const hasB = !!c.阶段预算;
+    const pct = hasB ? Math.min(100,c.累计花费/c.阶段预算*100) : 0;
+    return `<div class="card"><h3>${name} 累计</h3>
+      <div class="ov-grid">
+        <div class="ov-item"><span>累计花费</span><b>$${fmt(c.累计花费)}</b></div>
+        <div class="ov-item"><span>阶段预算</span><b>${hasB?"$"+fmt(c.阶段预算):"—"}</b></div>
+        <div class="ov-item"><span>累计销售</span><b>$${fmt(c.累计销售)}</b></div>
+        <div class="ov-item"><span>累计ACoS</span><b style="color:${c.累计ACoS<=c.目标ACoS?"var(--green)":"var(--red)"}">${c.累计ACoS}%</b></div>
+      </div>
+      <div class="small" style="margin:8px 0 4px;">${hasB?("预算使用 "+pct.toFixed(0)+"%"):"（未配置阶段预算，可用 --budget 传入）"}</div>
+      ${hasB?`<div class="bar" style="height:8px;background:#e8edf5;border-radius:99px;overflow:hidden;"><i style="display:block;height:100%;width:${pct}%;background:${c.累计ACoS<=c.目标ACoS?"var(--green)":"var(--amber)"};border-radius:99px;"></i></div>`:""}
+      <div style="margin-top:8px;">${c.累计ACoS<=c.目标ACoS?badge("目标 ACoS 达标","b-green"):badge("超出目标 ACoS","b-red")} 目标 ≤${c.目标ACoS}%</div></div>`; }).join("")
+    : '<div class="card"><h3>阶段累计</h3><div class="small">暂无累计数据——连续运行 weekly_monitor.py 积累周快照后自动生成</div></div>';
+}
+
+/* ============================================================
+ * 规则监控看板（领星规则周度监控 · 全品类周分析→本品类切片）
+ * ============================================================ */
+function renderRulesEffect(RM){
+  const E=RM.effect;
+  if(!E) return "";
+  const d=E.distribution||{};
+  const ORDER=[["改善","var(--green)"],["恶化","var(--red)"],["持平","var(--blue)"],["微量","#9aa5b8"],["零表现","#64748b"],["新表现","#7c3aed"]];
+  const tot=ORDER.reduce((a,[k])=>a+(d[k]||0),0)||1;
+  const prevSpendChg=(E.prev_spends?( (E.curr_spends-E.prev_spends)/E.prev_spends*100):null);
+  const acosOk=(E.curr_acos!=null&&E.curr_acos<=10);
+  let h=`<div class="sec-title">① 上周规则效果结论（${E.period}）<span class="note">数据源：领星规则周分析 Skill（全品类）→ 本品类切片 ｜ 源文件 ${String((RM.meta&&RM.meta.source)||"").split(/[\\/]+/).pop()} ｜ 判定口径：本周 vs 上周（改善/恶化/微量/零表现/新表现/持平）</span></div>
+  <div class="grid" style="grid-template-columns:repeat(6,1fr);">
+    <div class="card kpi"><div class="label">规则覆盖活动</div><div class="value">${fmt(E.campaigns)}</div><div class="sub">全品类 ${fmt(E.all_cat_campaigns)} 活动中</div></div>
+    <div class="card kpi"><div class="label">规则触发</div><div class="value">${fmt(RM.total)}</div><div class="sub">目标CPC ${(RM.by_cat||{})["目标CPC调整"]||0} / 暂停 ${(RM.by_cat||{})["广告活动暂停"]||0}</div></div>
+    <div class="card kpi"><div class="label">改善</div><div class="value" style="color:var(--green)">${d["改善"]||0}</div><div class="sub">恶化 ${d["恶化"]||0} · 改善:恶化 = ${d["改善"]||0}:${d["恶化"]||0}</div></div>
+    <div class="card kpi"><div class="label">本周花费</div><div class="value">$${fmt(E.curr_spends)}</div><div class="sub">上周 $${fmt(E.prev_spends)}${prevSpendChg!=null?`（${prevSpendChg>=0?"+":""}${prevSpendChg.toFixed(1)}%）`:""}</div></div>
+    <div class="card kpi"><div class="label">本周 ACoS</div><div class="value" style="color:${acosOk?"var(--green)":"var(--red)"}">${E.curr_acos!=null?E.curr_acos+"%":"—"}</div><div class="sub">上周 ${E.prev_acos!=null?E.prev_acos+"%":"—"} · 花费全品类第 ${E.spend_rank||"—"} 位</div></div>
+    <div class="card kpi"><div class="label">阶段判定</div><div class="value" style="font-size:15px">${RM.stage}</div><div class="sub">${acosOk?badge("ACoS 达标（≤10%）","b-green"):badge("超出目标","b-red")} ACoS 全品类第 ${E.acos_rank||"—"} 低</div></div>
+  </div>
+  <div class="card"><h3>活动判定分布（${fmt(tot)} 个活动）</h3>
+    <div class="bar" style="height:14px;background:#e8edf5;border-radius:99px;overflow:hidden;display:flex;">${ORDER.map(([k,c])=>`<i style="display:block;height:100%;width:${(d[k]||0)/tot*100}%;background:${c};"></i>`).join("")}</div>
+    <div style="margin-top:8px;display:flex;gap:14px;flex-wrap:wrap;" class="small">${ORDER.map(([k,c])=>`<span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${c};margin-right:4px;vertical-align:-1px;"></i>${k} <b>${d[k]||0}</b></span>`).join("")}</div>
+    <div class="small" style="margin-top:8px;color:var(--sub);">改善=ACoS降/订单升；恶化=ACoS升/订单降；微量=花费太小不足以判定；零表现=两周均无消耗；判定为周环比口径，仅统计被规则触发的活动</div>
+  </div>
+  <div class="sec-title">①-2 活动级明细（按本周花费排序 · ${fmt((E.campaigns_detail||[]).length)} 个）</div>
+  <div class="card">${tbl([{t:"活动",k:"活动名"},{t:"触发",k:"触发次数",num:true},{t:"判定",k:"判定",clsFn:r=>r.判定==="改善"?" good-cell":(r.判定==="恶化"?" warn-cell":"")},{t:"上周花费",k:"上周花费",num:true,fmt:v=>"$"+fmt(v)},{t:"上周ACoS",k:"上周ACoS",num:true,fmt:v=>v==null?"—":v+"%"},{t:"本周花费",k:"本周花费",num:true,fmt:v=>"$"+fmt(v)},{t:"本周销售",k:"本周销售",num:true,fmt:v=>"$"+fmt(v)},{t:"本周ACoS",k:"本周ACoS",num:true,fmt:v=>v==null?"—":v+"%",clsFn:r=>r.本周ACoS>16?" warn-cell":(r.本周ACoS!=null&&r.本周ACoS<=8?" good-cell":"")}],
+    E.campaigns_detail||[])}
+    <div class="small" style="margin-top:6px;">恶化活动需人工复核（触发/花费TOP 详见 ⑦ 调整措施）；8/30 触发的调价观察窗口未满，下周首日复查</div></div>`;
+  return h;
+}
+function renderRules(){
+  const RM=(D.monitor||{}).rules_monitor;
+  const box=$("#pg-rules");
+  if(!RM){ box.innerHTML=`<div class="card"><h3>📋 领星规则监控</h3><div class="small" style="line-height:2;">暂无规则监控数据。运行：<br><b>python pull_rules_weekly.py --week 26 --cat 空调压缩机</b>（品类切片，读取领星规则周分析全品类输出）→ 重跑 <b>build_dashboard.py</b> → 刷新本页</div></div>`; return; }
+  const CATS=["目标CPC调整","组内否词","广告活动暂停","产品暂停","广告组暂停","目标暂停","广告位调优","预算调整","启用类"];
+  const AC={"组内否词":"否词","广告活动暂停":"暂停","产品暂停":"暂停","广告组暂停":"暂停","目标暂停":"暂停","广告位调优":"调优","预算调整":"预算","启用类":"启用"};
+  const actFor=c=>c==="目标CPC调整"?`调高${RM.cpc_dir.调高||0}/调低${RM.cpc_dir.调低||0}`:(AC[c]||"");
+  const prev=(RM.prev_by_cat||{});
+  let h=renderRulesEffect(RM);
+  h+=`<div class="sec-title">② 周执行画像（${weekLabel(RM.week)} · ${RM.stage} · ${RM.total} 条触发）<span class="note">数据源：领星 apiLogStandard（RuleEngine 原子日志）｜上周 ${RM.prev_total||0} 条${RM.prev_note?"（"+RM.prev_note+"）":""}</span></div>
+  <div class="card">${tbl([{t:"规则类别",k:"类别"},{t:"本周",k:"本周",num:true},{t:"上周",k:"上周",num:true},{t:"环比",k:"环比",num:true,clsFn:r=>r.环比>0?" good-cell":(r.环比<0?" warn-cell":"")},{t:"主要动作",k:"动作"}],
+    CATS.map(c=>({类别:c,本周:RM.by_cat[c]||0,上周:prev[c]||0,环比:(RM.by_cat[c]||0)-(prev[c]||0),动作:actFor(c)})))}
+  </div>`;
+  const cd=RM.cpc_dir||{};
+  h+=`<div class="sec-title">③ CPC 方向分析（目标CPC调整 · ${(RM.meta&&RM.meta.period)||""}）</div>
+  <div class="grid" style="grid-template-columns:repeat(4,1fr);">
+    <div class="card kpi"><div class="label">调高</div><div class="value" style="color:var(--blue)">${cd.调高||0}</div><div class="sub">平均 +${cd.调高平均幅度||0}%</div></div>
+    <div class="card kpi"><div class="label">调低</div><div class="value" style="color:var(--green)">${cd.调低||0}</div><div class="sub">平均 -${cd.调低平均幅度||0}%</div></div>
+    <div class="card kpi"><div class="label">不变</div><div class="value">${cd.不变||0}</div><div class="sub">—</div></div>
+    <div class="card kpi"><div class="label">阶段判定</div><div class="value" style="font-size:15px">${RM.stage}</div><div class="sub">${RM.stage==="旺季"?"旺季允许调高（进攻），上限 $0.65":"回落/蓄水需与阶段策略一致，矛盾触发 A1 阶段约束"}</div></div>
+  </div>`;
+  h+=`<div class="sec-title">④ 触发活动 TOP 与抖动检测</div><div class="grid two">
+    <div class="card"><h3>触发活动 TOP</h3>${RM.top_campaigns&&RM.top_campaigns.length?tbl([{t:"活动",k:"活动名"},{t:"次数",k:"次数",num:true},{t:"主要类别",k:"主要类别"}],RM.top_campaigns):'<div class="small">（本周无触发）</div>'}</div>
+    <div class="card"><h3>抖动检测（同对象≥2次）</h3>${RM.jitter&&RM.jitter.length?tbl([{t:"对象ID",k:"对象ID"},{t:"类型",k:"类型"},{t:"次数",k:"次数",num:true},{t:"类别",k:"类别"}],RM.jitter)+'<div class="small" style="margin-top:6px;">→ 建议规则加冷却期 48h</div>':'<div class="small">✅ 无抖动</div>'}</div></div>`;
+  h+=`<div class="sec-title">⑤ 有效性验证（抽样前后 7 天）<span class="note">周分析 Skill 抽样：触发活动花费TOP30 × 各层级10条（本品类切片）</span></div>
+  <div class="card">${RM.validation&&RM.validation.length?tbl([{t:"对象",k:"对象ID"},{t:"类别",k:"类别"},{t:"动作",k:"动作"},{t:"前7天 订单/ACoS",k:"前7",fmt:(v,r)=>r.前7天订单+" / "+r.前ACoS+"%"},{t:"后7天 订单/ACoS",k:"后7",fmt:(v,r)=>r.后7天订单+" / "+r.后ACoS+"%"},{t:"判定",k:"判定",clsFn:r=>r.判定.startsWith("✅")?" good-cell":(r.判定.startsWith("❌")?" warn-cell":"")}],RM.validation):'<div class="small">本周无抽样验证数据——运行 validate_auto_10.py 生成 validation.json</div>'}</div>`;
+  h+=`<div class="sec-title">⑥ 完整性矩阵（需求 vs 执行）<span class="note">需求=领星规则中心本品类启用规则数 ｜ 执行=本周原子日志 ｜ ⊘=API日志不可证</span></div>
+  <div class="card">${tbl([{t:"规则类别",k:"类别"},{t:"需求",k:"需求",num:true},{t:"本周",k:"本周",num:true},{t:"历史累计",k:"历史",num:true},{t:"判定",k:"判定"},{t:"说明",k:"说明"}],
+    RM.integrity.map(r=>({...r,判定:badge(r.判定, r.判定.startsWith("✅")?"b-green":(r.判定.startsWith("⚠️")||r.判定.startsWith("⊘")||r.判定.startsWith("❓")?"b-amber":"b-red"))})))}</div>`;
+  h+=`<div class="sec-title">⑦ 调整措施（本周执行）</div>
+  <div class="card"><div class="alert-list">${RM.measures.map(m=>`<div class="alert-item amber"><span class="prio ${m.优先级==="P0"?"p0":(m.优先级==="P1"?"p1":"p2")}">${m.优先级}</span><span><b>（${m.类型}）</b> ${m.措施}<br><span class="small">依据：${m.依据}</span></span></div>`).join("")}</div></div>`;
+  h+=`<div class="sec-title">⑧ 空压现有自动规则对照（真实执行回填）</div>
+  <div class="card">${tbl([{t:"规则",k:"规则"},{t:"现状",k:"现状"},{t:"周监控结论",k:"结论",clsFn:r=>String(r.结论).startsWith("✅")?" good-cell":(String(r.结论).startsWith("❌")?" warn-cell":"")}],[
+    {规则:"组内否词：14天花费>5且0单/点击>7且0单/ACoS>35%",现状:"启用（⊘ 不可证）",结论:"⊘ 操作日志无否词记录 → 每周人工抽查 5 条核对"},
+    {规则:"目标CPC：转化<3%且ACoS>20%→降10%；ACoS<6%且CVR>5%→升5%（上限$1-2）",现状:"启用 · 本周36条",结论:"⚠️ 回落期调高 35/36（97%）与『回落收缩』矛盾 → 禁用升5%分支（阶段约束）"},
+    {规则:"广告活动暂停：捡漏14天花费>10且ACoS>15%/大词7天ACoS>18%",现状:"启用 · 本周5条",结论:"✅ 有执行（产品暂停以活动级 STATUS 近似，合并统计）"},
+    {规则:"产品暂停：30天花费>15且0单 / 广告组暂停：14天花费>15且无单",现状:"启用（⊘ 部分不可证）",结论:"⊘ 广告组级不产生独立日志 → 以活动级近似+人工抽查"},
+    {规则:"广告位调优",现状:"❌ 未配置",结论:"❌ 本周 0 条自动执行（P0 核实补建，回落期人工周检顶部溢价）"},
+    {规则:"预算保护 / 旺季进攻类",现状:"❌ 空白",结论:"❌ 本周 0 条（P1 补建：周花费>阶段预算×1.1 自动降10%）"}
+  ])}</div>`;
+  const hist=RM.history||[];
+  if(hist.length){
+    h+=`<div class="sec-title">⑨ 历史执行序列（近 8 周）</div>
+    <div class="card">${tbl([{t:"周",k:"周"},{t:"阶段",k:"阶段"},{t:"总触发",k:"总",num:true},{t:"目标CPC",k:"目标CPC",num:true},{t:"否词",k:"组内否词",num:true},{t:"暂停类",k:"暂停",num:true}],
+      hist.slice(-8).map(s=>({周:weekLabel(s.week),阶段:s.stage,总:Object.values(s.by_cat||{}).reduce((a,b)=>a+b,0),目标CPC:(s.by_cat||{})["目标CPC调整"]||0,组内否词:(s.by_cat||{})["组内否词"]||0,暂停:((s.by_cat||{})["广告活动暂停"]||0)+((s.by_cat||{})["广告组暂停"]||0)+((s.by_cat||{})["目标暂停"]||0)})))}
+    </div>`;
+  }
+  box.innerHTML=h;
+}
+
+/* ============================================================
+ * 深度下钻看板（补齐复盘框架未呈现维度 · analyze_deep.py）
+ * ============================================================ */
+function renderDrill(){
+  const DD = (D.review||{}).drill_down;
+  const box = $("#rv-drill");
+  if(!DD){ box.innerHTML=`<div class="card"><h3>🔍 深度下钻</h3><div class="small" style="line-height:2;">暂无下钻数据。运行：<br><b>python analyze_deep.py</b> → 重跑 <b>build_dashboard.py</b> → 刷新本页<br>下钻维度：分阶段×系列 / 低效活动 / 标签批次 / 利润逐月 / 渠道互补 / 大促窗口 / 否词候选 / 规则损失（对照《复盘框架vs看板呈现差距与补齐清单》）</div></div>`; return; }
+  const acosCell = v => v<=8?'<span class="good-cell">'+v+'%</span>':(v<=16?'<span>'+v+'%</span>':'<span class="warn-cell">'+v+'%</span>');
+  // 月份筛选（全部 / 3-8月），各板块按月切换且保持呈现
+  const MDD = DD.month_drill || {};
+  const months = Object.keys(MDD).sort();
+  const cur = DD_MONTH !== "all" ? (MDD[DD_MONTH] || null) : null;
+  const mLabel = cur ? (DD_MONTH.slice(5) + "月 ") : "";
+  // 7 个下钻板块导航按钮（点击跳转；否词候选已移至总复盘"搜索词"区）
+  const SECTIONS = [
+    {id:"dd1", label:"① 分阶段×系列"}, {id:"dd2", label:"② 低效活动"},
+    {id:"dd3", label:"③ 标签批次"}, {id:"dd4", label:"④ 损益逐月"},
+    {id:"dd5", label:"⑤ 渠道互补"}, {id:"dd6", label:"⑥ 大促窗口"},
+    {id:"dd7", label:"⑦ 规则损失"},
+  ];
+  let h = `<div class="mm-nav">
+      <span class="mm-t">月份：</span>
+      <button class="dd-btn ${DD_MONTH==="all"?"active":""}" onclick="setDrillMonth('all')">全部</button>
+      ${months.map(k=>`<button class="dd-btn ${DD_MONTH===k?"active":""}" onclick="setDrillMonth('${k}')">${k.slice(5)}月</button>`).join("")}
+    </div>
+    <div class="dd-nav">${SECTIONS.map(s=>`<button class="dd-btn" data-id="${s.id}" onclick="jumpTo('${s.id}')">${s.label}</button>`).join("")}</div>`;
+  const thSeries = cur ? [{t:"系列",k:"系列"},{t:"花费",k:"花费",num:true,fmt:v=>"$"+fmt(v)},{t:"销售",k:"销售",num:true,fmt:v=>"$"+fmt(v)},{t:"订单",k:"订单",num:true},{t:"ACoS",k:"ACoS",num:true,fmt:v=>v+"%",clsFn:r=>r.ACoS>16?" warn-cell":(r.ACoS<=8?" good-cell":"")}]
+                        : [{t:"阶段",k:"阶段"},{t:"系列",k:"系列"},{t:"花费",k:"花费",num:true,fmt:v=>"$"+fmt(v)},{t:"销售",k:"销售",num:true,fmt:v=>"$"+fmt(v)},{t:"订单",k:"订单",num:true},{t:"ACoS",k:"ACoS",num:true,fmt:v=>v+"%",clsFn:r=>r.ACoS>16?" warn-cell":(r.ACoS<=8?" good-cell":"")}];
+  const dataSeries = cur ? (cur.系列||[]) : (DD.stage_series||[]);
+
+  // ① 分阶段 × 系列 / 月 × 系列（未标注 ASIN <5% → 忽略不展示）
+  const un = DD.unlabeled;
+  const unNote = un ? `｜未标注 ${un.未标注数}/${un.整体数} ${un.口径}（${un.占比}）${un.忽略?"＜5% 已忽略，不展示":"≥5% 保留展示"}` : "";
+  h+=`<div class="sec-title" id="dd1">① ${cur?"月度":"分阶段"} × 系列（ASIN 层）${mLabel}<span class="note">${cur?"该月各系列表现（翻新/全新/混合）":"需求②下钻：各阶段翻新/全新/混合表现"}${unNote}</span></div>
+  <div class="card">${tbl(thSeries,dataSeries)}</div>`;
+
+  // ② 低效活动清单（按当前月份）
+  const lc = cur ? (cur.低效活动||[]) : (DD.loweff_campaigns||[]);
+  const lcN = cur ? (cur.低效活动数||0) : (DD.loweff_count||0);
+  h+=`<div class="sec-title" id="dd2">② 低效活动清单 ${mLabel}（ACoS &gt; 盈亏线×1.2 = ${DD.loweff_th||24}%）<span class="note">${cur?`该月 ${lcN} 个 · 展示 TOP15`:`共 ${lcN} 个 · 展示 TOP15`} ｜ 需求④下钻</span></div>
+  <div class="card">${lc.length?tbl([{t:"活动",k:"活动"},{t:"系列",k:"系列"},{t:"策略",k:"策略"},{t:"花费",k:"花费",num:true,fmt:v=>"$"+fmt(v)},{t:"销售",k:"销售",num:true,fmt:v=>"$"+fmt(v)},{t:"ACoS",k:"ACoS",num:true,fmt:v=>v+"%",clsFn:r=>" warn-cell"}],lc):'<div class="small">✅ 该月无低效活动</div>'}</div>`;
+
+  // ③ 标签批次（按当前月份）
+  const bt = cur ? (cur.标签批次||[]) : (DD.batch_tags||[]);
+  h+=`<div class="sec-title" id="dd3">③ 标签批次维度 ${mLabel}<span class="note">需求⑦下钻：MIX/捡漏/车型词/大词/引流 批次表现</span></div>
+  <div class="grid two">
+    <div class="card"><h3>批次 ACoS</h3><div class="chart" id="dd-batch"></div></div>
+    <div class="card"><h3>批次明细</h3>${tbl([{t:"批次",k:"批次"},{t:"花费",k:"花费",num:true,fmt:v=>"$"+fmt(v)},{t:"销售",k:"销售",num:true,fmt:v=>"$"+fmt(v)},{t:"订单",k:"订单",num:true},{t:"ACoS",k:"ACoS",num:true,fmt:v=>v+"%",clsFn:r=>r.ACoS>16?" warn-cell":(r.ACoS<=8?" good-cell":"")}],bt)}</div>
+  </div>`;
+
+  // ④ 损益逐月（广告口径 + BI 损益；选月高亮该行）
+  const hl = DD_MONTH==="all" ? (()=>"") : (r=> r.月份===DD_MONTH ? " hl" : "");
+  h+=`<div class="sec-title" id="dd4">④ 损益逐月下钻 ${mLabel}<span class="note">需求①：广告口径利润贡献 + BI 损益（毛利率/广告费/促销/退款）${DD_MONTH!=="all"?"｜已选中 "+DD_MONTH.slice(5)+" 月（高亮行）":""}</span></div>
+  <div class="grid two">
+    <div class="card"><h3>广告利润贡献（广告口径）</h3>${tbl([{t:"月份",k:"月份",clsFn:hl},{t:"销售",k:"销售",num:true,fmt:v=>"$"+fmt(v)},{t:"ACoS",k:"ACoS",num:true,fmt:v=>v+"%"},{t:"利润贡献",k:"利润贡献",num:true,fmt:v=>"$"+fmt(v),clsFn:r=>r.利润贡献<0?" warn-cell":" good-cell"}],DD.profit_monthly||[])}</div>
+    <div class="card"><h3>BI 损益（销售/毛利率/广告费/促销/退款）<span class="src">bi-getdata-company-all MCP</span></h3>${tbl([{t:"月份",k:"月份",clsFn:hl},{t:"销售",k:"销售",num:true,fmt:v=>"$"+fmt(v)},{t:"销量",k:"销量",num:true},{t:"毛利率",k:"毛利率",num:true,fmt:v=>v+"%",clsFn:r=>r.毛利率<12?" warn-cell":""},{t:"广告费",k:"广告费",num:true,fmt:v=>"$"+fmt(v)},{t:"广告费占比",k:"广告费占比",num:true,fmt:v=>v+"%"},{t:"促销费",k:"促销费",num:true,fmt:v=>"$"+fmt(v)},{t:"退款",k:"退款",num:true,fmt:v=>"$"+fmt(v)}],DD.bi_monthly||[])}
+    <div class="small" style="margin-top:6px;">毛利率为 BI 加权口径；广告费为 BI 损益口径（与广告报表口径存在差异，用于趋势参考）；1-2 月、9 月为全年日历空位的 BI 侧补充数据</div></div>
+  </div>`;
+
+  // ⑤ SB/SD 渠道互补（选月高亮该行）
+  h+=`<div class="sec-title" id="dd5">⑤ SB/SD 渠道互补 ${mLabel}<span class="note">需求③下钻：补充渠道占 SP 比趋势</span></div>
+  <div class="card">${tbl([{t:"月份",k:"月份",clsFn:hl},{t:"SP花费",k:"SP",num:true,fmt:v=>"$"+fmt(v)},{t:"SD花费",k:"SD",num:true,fmt:v=>"$"+fmt(v)},{t:"SD占比",k:"SD占比",num:true,fmt:v=>v+"%"},{t:"SB2花费",k:"SB2",num:true,fmt:v=>"$"+fmt(v)},{t:"SB2占比",k:"SB2占比",num:true,fmt:v=>v+"%",clsFn:r=>r.SB2占比>15?" warn-cell":""}],DD.channel_comp||[])}
+  <div class="small" style="margin-top:6px;">SD/SB2 合计占 SP 仅 ~5%，为补充渠道；SB2 旺季占比 &gt;15% 需控本</div></div>`;
+
+  // ⑥ 大促四窗口对比（日粒度：会员日/前一周/大促周/后一周；异常识别）
+  const p4 = DD.promo_4win;
+  if(p4 && p4.窗口){
+    const w4 = p4.窗口;
+    const rows4 = Object.entries(w4).map(([k,v])=>({窗口:k, ...v}));
+    const b6p = p4["6月基准"]||{}, b7p = p4["7月基准"]||{};
+    h+=`<div class="sec-title" id="dd6">⑥ 大促四窗口对比<span class="note">${p4.定义||""}｜${p4.数据源||"领星日粒度"}</span></div>
+    <div class="card">${tbl([{t:"窗口",k:"窗口"},{t:"天数",k:"天数",num:true},{t:"花费",k:"花费",num:true,fmt:v=>"$"+fmt(v)},{t:"销售",k:"销售",num:true,fmt:v=>"$"+fmt(v)},{t:"订单",k:"订单",num:true},{t:"ACoS",k:"ACoS",num:true,fmt:v=>v+"%",clsFn:r=>r.ACoS>16?" warn-cell":(r.ACoS<=8?" good-cell":"")}],rows4)}
+    <div class="small" style="margin-top:6px;">6月全月基准 ACoS ${b6p.ACoS!=null?b6p.ACoS+"%":"—"}（花费 $${fmt(b6p.花费)}）｜7月全月基准 ACoS ${b7p.ACoS!=null?b7p.ACoS+"%":"—"}（花费 $${fmt(b7p.花费)}）</div></div>
+    ${(p4.异常||[]).length?`<div class="card" style="margin-top:12px;"><h3>🚨 四窗口异常识别</h3><div class="alert-list">${p4.异常.map(a=>`<div class="alert-item red"><span class="rule">异常</span><span>${a}</span></div>`).join("")}</div></div>`:""}
+    <div class="card" style="margin-top:12px;"><h3>大促周（6.23-29）触发活动 TOP</h3>${(p4.top_campaigns||[]).length?tbl([{t:"活动",k:"活动"},{t:"花费",k:"花费",num:true,fmt:v=>"$"+fmt(v)},{t:"销售",k:"销售",num:true,fmt:v=>"$"+fmt(v)},{t:"ACoS",k:"ACoS",num:true,fmt:v=>v+"%",clsFn:r=>r.ACoS>16?" warn-cell":""}],p4.top_campaigns):'<div class="small">（无窗口数据）</div>'}
+    <div class="small" style="margin-top:6px;">异常口径：大促后一周 ACoS &gt; 大促周 → R14 收缩 50% 预警（监测机制）</div></div>`;
+  } else {
+  // ⑥ fallback：旧活动级大促窗口（无日粒度时）
+  const pw = DD.promo_window||{};
+  const ww = pw.窗口||{}, b6 = pw["6月基准"]||{}, b7 = pw["7月基准"]||{};
+  h+=`<div class="sec-title" id="dd6">⑥ 大促窗口对比<span class="note">${pw.窗口定义||""}｜窗口口径覆盖 6-7 月（活动级聚合）</span></div>
+  <div class="grid" style="grid-template-columns:repeat(3,1fr);">
+    <div class="card kpi"><div class="label">大促窗口(6.16-7.5)</div><div class="value" style="color:var(--amber)">${ww.ACoS!=null?ww.ACoS+"%":"—"}</div><div class="sub">花费 $${fmt(ww.花费)} · 销售 $${fmt(ww.销售)} · ${fmt(ww.订单)} 单</div></div>
+    <div class="card kpi"><div class="label">6月全月(基准)</div><div class="value">${b6.ACoS!=null?b6.ACoS+"%":"—"}</div><div class="sub">花费 $${fmt(b6.花费)} · 销售 $${fmt(b6.销售)}</div></div>
+    <div class="card kpi"><div class="label">7月全月(基准)</div><div class="value">${b7.ACoS!=null?b7.ACoS+"%":"—"}</div><div class="sub">花费 $${fmt(b7.花费)} · 销售 $${fmt(b7.销售)}</div></div>
+  </div>
+  <div class="card" style="margin-top:14px;"><h3>窗口触发活动 TOP</h3>${(pw.top_campaigns||[]).length?tbl([{t:"活动",k:"活动"},{t:"花费",k:"花费",num:true,fmt:v=>"$"+fmt(v)},{t:"销售",k:"销售",num:true,fmt:v=>"$"+fmt(v)},{t:"ACoS",k:"ACoS",num:true,fmt:v=>v+"%",clsFn:r=>r.ACoS>16?" warn-cell":""}],pw.top_campaigns):'<div class="small">（无窗口数据）</div>'}
+  <div class="small" style="margin-top:6px;">大促后一周 ACoS &gt; 大促周 → R14 收缩 50% 预警（监测机制）</div></div>`;
+  }
+
+  // ⑦ 规则损失估算（按当前月份；否词候选已移至总复盘"搜索词"区）
+  const rl = cur ? {低效活动浪费估算: cur.规则损失||0, 说明: `${mLabel}低效活动（ACoS>${DD.loweff_th||24}%）的超盈亏线部分花费估算（月口径）`, 缺口: DD.rule_loss?DD.rule_loss.缺口:[]} : (DD.rule_loss||{});
+  h+=`<div class="sec-title" id="dd7">⑦ 规则损失估算 ${mLabel}<span class="note">需求⑨下钻：低效活动超额花费${cur?"（该月）":""}</span></div>
+  <div class="grid two">
+    <div class="card kpi"><div class="label">低效活动浪费估算${cur?"（该月）":""}</div><div class="value" style="color:var(--red)">$${fmt(rl.低效活动浪费估算)}</div><div class="sub">${rl.说明||""}</div></div>
+    <div class="card"><h3>规则缺口</h3><ul class="concl-list">${(rl.缺口||[]).map(g=>`<li>${g}</li>`).join("")}</ul>
+    <div class="small" style="margin-top:8px;">→ 详见 规则监控 Tab（P0 广告位启用 / P1 预算保护 / P1 进攻类补建）</div></div>
+  </div>`;
+
+  box.innerHTML=h;
+
+  // ③ 批次条形图（数据源随月份切换，bt 已在 ③ 定义）
+  if(bt.length){
+    const W=620,H=bt.length*44+30,padL=70,padR=30,padT=12;
+    const mx=Math.max(...bt.map(b=>b.ACoS),12)*1.15;
+    const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+    svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+    bt.forEach((b,i)=>{ const y=padT+i*44, w=(H?0:0)+(W-padL-padR)*b.ACoS/mx;
+      svg.innerHTML+=`<text x="${padL-8}" y="${y+16}" font-size="11.5" text-anchor="end" fill="#1c2433">${b.批次}</text>`;
+      svg.innerHTML+=`<rect x="${padL}" y="${y+4}" width="${w}" height="18" rx="5" fill="${b.ACoS<=8?"#16a34a":(b.ACoS<=16?"#60a5fa":"#f59e0b")}"><title>${b.批次}: ${b.ACoS}%</title></rect>`;
+      svg.innerHTML+=`<text x="${padL+w+6}" y="${y+18}" font-size="11" font-weight="700" fill="${b.ACoS<=8?"#16a34a":(b.ACoS<=16?"#2563eb":"#d97706")}">${b.ACoS}%</text>`; });
+    $("#dd-batch").appendChild(svg);
+  }
+}
+
+/* 深度下钻导航：点击按钮平滑跳转并高亮 */
+function jumpTo(id){
+  const el = document.getElementById(id);
+  if(el && el.scrollIntoView) el.scrollIntoView({behavior:"smooth", block:"start"});
+  document.querySelectorAll(".dd-btn").forEach(b=>b.classList.remove("active"));
+  const btn = document.querySelector(`.dd-btn[data-id="${id}"]`);
+  if(btn) btn.classList.add("active");
+}
+/* 深度下钻月份筛选：切换后重渲染 8 板块（保持呈现） */
+function setDrillMonth(k){ DD_MONTH = k; renderDrill(); }
+
+/* ============================================================
+ * 月度策略细化（策略卡点击下钻：翻新/全新分模块 + 库存 + 市场）
+ * ============================================================ */
+let CUR_MD = null, CUR_SIDE = "翻新";
+function showMonth(key, label){
+  const md = D.review.drill_down.month_detail[key];
+  if(!md) return;
+  CUR_MD = {key: key, label: label, md: md};
+  CUR_SIDE = "翻新";
+  const panel = $("#month-detail");
+  panel.style.display = "block";
+  $("#md-month").innerHTML = `${label} · ${key} 策略细化`;
+  renderMdTabs(); renderMdBody();
+}
+function setSide(s){ CUR_SIDE = s; renderMdTabs(); renderMdBody(); }
+function renderMdTabs(){
+  const sides = ["翻新", "全新", "混合"];
+  const avail = sides.filter(s=>CUR_MD.md[s] && (CUR_MD.md[s].strategies||[]).length);
+  if(!avail.includes(CUR_SIDE)) CUR_SIDE = avail[0] || "翻新";
+  $("#md-tabs").innerHTML = avail.map(s=>`<button class="md-tab ${s===CUR_SIDE?"active":""}" onclick="setSide('${s}')">${s==="翻新"?"🔧 翻新广告":(s==="全新"?"🆕 全新广告":"🔀 混合")}</button>`).join("");
+}
+function renderMdBody(){
+  const side = CUR_MD.md[CUR_SIDE] || {};
+  const strategies = side.strategies || [];
+  const inv = CUR_MD.md.库存 || {};
+  const mkt = CUR_MD.md.市场 || {};
+  const ad = strategies.reduce((a,s)=>({花费:a.花费+s.花费,销售:a.销售+s.销售,订单:a.订单+s.订单}),{花费:0,销售:0,订单:0});
+  const adAcos = ad.销售 ? ad.花费/ad.销售*100 : 0;
+  const best = strategies.length ? strategies.reduce((a,b)=>a.ACoS<b.ACoS?b:a) : null;
+  const warn = strategies.filter(s=>s.ACoS>16);
+  let insight = "";
+  if(CUR_SIDE==="翻新" && best) insight = `翻新线最优：<b>${best.策略}</b>（ACoS ${best.ACoS}%，盈亏线 20%）`;
+  if(CUR_SIDE==="全新" && best) insight = `全新线最优：<b>${best.策略}</b>（ACoS ${best.ACoS}%，盈亏线 27.9%）`;
+  if(adAcos>0) insight += ` ｜ ${CUR_SIDE}整体 ACoS ${adAcos.toFixed(1)}% ${adAcos<=20?"✅ 健康":(adAcos<=27.9?"🟡 接近全新盈亏线":"🔴 超全新盈亏线")}`;
+  if(CUR_SIDE==="全新"){ const kw=strategies.find(s=>s.策略==="KW关键词"); if(kw&&kw.ACoS>13) insight += ` ｜ ⚠️ 全新 KW ${kw.ACoS}% 偏高（复盘避雷点）`; }
+  if(warn.length) insight += ` ｜ 🔴 需关注：${warn.map(s=>s.策略+" "+s.ACoS+"%").join("、")}`;
+  let invTxt = `FBA SKU ${inv.FBA_SKU||0}（可售 ${inv.FBA_可售||0} · 断货 ${inv.断货||0}）｜ PO SKU ${inv.PO_SKU||0}（在库 ${inv.PO_在库||0} · 库龄90+ ${inv["库龄90+"]||0}）`;
+  if(inv.断货>50) invTxt += " ｜ 🔴 断货偏多 = 广告白烧";
+  if(inv["库龄90+"]>500) invTxt += " ｜ ⚠️ 库龄90+偏高 = 滞销风险";
+  let mktTxt = mkt.类目销量 ? `类目月销 ${mkt.类目销量}（环比 ${mkt.环比!=null?mkt.环比+"%":"—"}）` : "市场数据待接入（Sorftime）";
+  if(mkt.环比!=null && mkt.环比>30) mktTxt += " ｜ 🟢 市场放量信号（提前放量）";
+  else if(mkt.环比!=null && mkt.环比<0) mktTxt += " ｜ ⚠️ 市场回落";
+  $("#md-body").innerHTML = `
+    <div class="grid two">
+      <div class="card"><h3>${CUR_SIDE==="翻新"?"🔧 翻新广告":"🆕 全新广告"} · 策略细化</h3>
+        ${strategies.length? tbl([{t:"策略",k:"策略"},{t:"花费",k:"花费",num:true,fmt:v=>"$"+fmt(v)},{t:"销售",k:"销售",num:true,fmt:v=>"$"+fmt(v)},{t:"订单",k:"订单",num:true},{t:"ACoS",k:"ACoS",num:true,fmt:v=>v+"%",clsFn:r=>r.ACoS>16?" warn-cell":(r.ACoS<=8?" good-cell":"")}],strategies) : '<div class="small">该月无此系列投放</div>'}
+        <div style="margin-top:8px;font-size:12.5px;line-height:1.8;color:var(--sub);">${insight||""}</div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:12px;"><h3>📦 库存指标（当月）<span class="src">BI 月度库存</span></h3>
+          <div class="ov-grid" style="grid-template-columns:repeat(3,1fr);">
+            <div class="ov-item"><span>FBA SKU</span><b>${inv.FBA_SKU||0}</b><span class="chg" style="color:var(--sub)">可售 ${inv.FBA_可售||0} · 断货 ${inv.断货||0}</span></div>
+            <div class="ov-item"><span>翻新/全新 FBA</span><b>${inv.翻新_FBA||0}/${inv.全新_FBA||0}</b><span class="chg" style="color:var(--sub)">SKU 数</span></div>
+            <div class="ov-item"><span>PO SKU</span><b>${inv.PO_SKU||0}</b><span class="chg" style="color:var(--sub)">在库 ${inv.PO_在库||0} · 库龄90+ ${inv["库龄90+"]||0}</span></div>
+          </div>
+          <div class="small" style="margin-top:8px;line-height:1.8;">${invTxt}</div>
+        </div>
+        <div class="card"><h3>📈 市场趋势（当月）<span class="src">Sorftime 类目</span></h3>
+          <div class="ov-grid" style="grid-template-columns:repeat(2,1fr);">
+            <div class="ov-item"><span>类目月销量</span><b>${mkt.类目销量||"—"}</b><span class="chg" style="color:var(--sub)">AC Compressors</span></div>
+            <div class="ov-item"><span>环比</span><b style="color:${mkt.环比!=null&&mkt.环比>=0?"var(--green)":"var(--red)"}">${mkt.环比!=null?mkt.环比+"%":"—"}</b></div>
+          </div>
+          <div class="small" style="margin-top:8px;line-height:1.8;">${mktTxt}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* 工具：小表（模块内用） */
+function tbl(heads,rows){ const th=heads.map(h=>`<th class="${h.num?"num":""}">${h.t}</th>`).join("");
+  const tr=rows.map(r=>{ const tds=heads.map(h=>{ let v=r[h.k]; let cls=h.num?"num":"";
+    if(h.clsFn&&h.clsFn(r)) cls+=h.clsFn(r); if(h.fmt&&typeof h.fmt==="function") v=h.fmt(v,r); return `<td class="${cls}">${v??"—"}</td>`; }).join("");
+    return `<tr>${tds}</tr>`; }).join("");
+  return `<table><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table>`; }
+
+/* ---------- 启动 ---------- */
+if(!D){ document.body.innerHTML='<div style="padding:60px;text-align:center;font-size:16px;">❌ 未找到数据文件：请确认 <b>dashboard_data.js</b> 与本页面在同一目录（看板/）</div>'; }
+else{
+  document.title=D.meta.title;
+  $("#hd-meta").innerHTML=`${D.meta.season} ｜ ${D.meta.scope} ｜ 数据更新 ${D.meta.updated}`;
+  renderReview(); renderMonitor(); renderRules(); renderDrill();
+}
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active"); $("#page-"+b.dataset.tab).classList.add("active");
+}));
+</script>
+</body>
+</html>
