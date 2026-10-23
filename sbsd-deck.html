@@ -33,7 +33,8 @@ body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;color:var(--ink);
 font-variant-numeric:tabular-nums;font-size:26px;line-height:1.55}
 .slide{padding:64px 88px;display:flex;flex-direction:column}
 .shead{flex-shrink:0}
-.slide>*:not(.shead){margin-top:auto;margin-bottom:auto}
+.slide-body{flex:1;display:flex;flex-direction:column;justify-content:center}
+.slide>*:not(.shead):not(.slide-body){margin-top:auto;margin-bottom:auto}
 .shead{display:flex;align-items:baseline;gap:18px;border-bottom:3px solid var(--tint);padding-bottom:14px;margin-bottom:26px}
 .shead .no{color:var(--blue);font-size:26px;font-weight:700}
 .shead h2{font-size:52px;color:var(--navy);font-weight:700;letter-spacing:1px}
@@ -258,11 +259,26 @@ padding:12px 30px;border-radius:26px;font-size:22px;z-index:10003;opacity:0;tran
 <!-- S8 策略全景 -->
 <section class="slide">
 <div class="shead"><span class="no">05+</span><h2 class="editable">SBSD策略全景</h2><span class="sub">SD 14类 · SB 8类</span></div>
-<ul class="tl reveal editable">
+<div class="slide-body">
+<div class="dist reveal" style="border-radius:12px"><div class="segs s-good" style="flex:65"><span>有效/合格 31</span></div><div class="segs s-ok" style="flex:28"><span>可用/待改善 13</span></div><div class="segs s-warn" style="flex:28"><span>低效/预警 5</span></div><div class="segs s-bad" style="flex:28"><span>关停 3</span></div><div class="segs s-test" style="flex:28"><span>测试中 18</span></div></div>
+<ul class="tl reveal editable" style="margin-top:18px">
 <li class="big"><b>SD侧 14 类定向打法：</b>受众类 5 种（浏览/购买/本品/高销/场内客群+类似商品受众）、上下文与竞品 5 种、组合与节点 3 种——<b>定向类型层无失败策略</b>（ACOS 4.35%–5.65% 全达线），优化在参数（30天回溯为主/7天窗口最优/分类细分偏弱）</li>
 <li class="big"><b>SB侧 8 类：</b>旗舰店 2 种/商品集/关键词 4 种/SBV——除旗舰店与高客单商品集外合格率低；关键词结构按<b>「广泛探量→短语验证→精准收割」</b>三段式重构（精准匹配 1.66% 是短语 14.23% 的 8.6 倍但仅占 7% 花费）</li>
 </ul>
-<a class="btn reveal" href="https://alidocs.dingtalk.com/i/nodes/XPwkYGxZV3RweqdkTrZ370MMWAgozOKL" target="_blank">打开钉钉在线表格：策略全景与策略地图（24打法／70组合矩阵，含判定配色）→</a>
+<div class="cols reveal" style="grid-template-columns:1fr 1fr;margin-top:16px">
+<div class="card"><div class="t">SD 已验证有效的核心定向</div>
+<div class="chartbox" style="padding:14px 18px">
+<div class="hrow"><span class="hl">销售中台（本报告主体）</span><div class="hbar"><i class="hb ok" style="width:100%"></i></div><span class="hv">$47,944</span><span class="chip c-good">5.15%</span></div><div class="hrow"><span class="hl">运营自投</span><div class="hbar"><i class="hb ok" style="width:14%"></i></div><span class="hv">$6,699</span><span class="chip c-warn">10.08%</span></div><div class="hrow"><span class="hl">BS部门自投</span><div class="hbar"><i class="hb ok" style="width:7%"></i></div><span class="hv">$3,512</span><span class="chip c-ok">6.60%</span></div>
+<div class="leg"><span><i style="background:#34A853"></i>ACOS&lt;6%</span><span><i style="background:var(--blue)"></i>6–8%</span></div></div></div>
+<div class="card"><div class="t">SB 策略合格/预警分布</div>
+<ul class="tl" style="font-size:22px">
+<li><span class="chip c-good">✔ 合格</span> 品牌旗舰店 1.96% · 散热器商品集 2.27% · 转向器商品集 13.4–14.2% · 空压大词 10.98% · 空压车型词 14.02%</li>
+<li><span class="chip c-warn">◐ 待改善</span> 滤清器SB关键词 21.36%（引流）· 燃油泵车型词 20.72% · 空压词组 20.77% · 刹车盘片大词 23.30%</li>
+<li><span class="chip c-bad">✘ 关停</span> 轮毂附件SB长尾 56.68% · 滤清商品集(自动) 51.59% · 三元SB词组 87.8%</li>
+</ul></div>
+</div>
+<a class="btn reveal" href="https://alidocs.dingtalk.com/i/nodes/XPwkYGxZV3RweqdkTrZ370MMWAgozOKL" target="_blank">打开钉钉在线表格：策略全景与策略地图 →</a>
+</div>
 </section>
 
 <!-- S9 Q4预算 -->
@@ -300,18 +316,27 @@ padding:12px 30px;border-radius:26px;font-size:22px;z-index:10003;opacity:0;tran
 <!-- S11 预算论证 -->
 <section class="slide">
 <div class="shead"><span class="no">07</span><h2 class="editable">预算申请论证</h2><span class="sub">品类×策略实测依据 · 2026年4–9月</span></div>
-<p class="reveal editable big" style="margin-bottom:16px"><b>Q4 申请月度总盘 $14,300。</b>按预算模块逐项给出「品类×策略」实测论证——所有表现数据均来自半年实测（70个组合）：</p>
+<div class="slide-body">
+<p class="reveal editable big" style="margin-bottom:14px"><b>Q4 申请月度总盘 $14,300。</b>按预算模块逐项给出「品类×策略」实测论证——所有表现数据均来自半年实测（70个组合）：</p>
 <div class="points reveal editable">
 <div class="point"><div class="t">要点一：有效组合浓度</div>半年 $47.9K 花费中 <b>65% 投在已验证有效/合格的组合上，且整体 ACOS 5.15%</b>——加预算是在已被数据验证的打法上加码，而非探索性投放</div>
 <div class="point"><div class="t">要点二：市占错配的确定性</div>卡钳 37.4% 市占仅 3.2% 花费（防御欠投）、P1四品类有市占零投放（进攻空白）——预算去向对应明确的卡位缺口，非盲目扩盘</div>
 <div class="point"><div class="t">要点三：增量证据链完整</div>张紧器/水泵首月实测近转正线、SBV 有明确闸门（4周 ACOS≤30% 不达标回补）、优化测试三项均有正向苗头且设转正/停投闸门、全流域有官方效果数据与独立评估口径（LTS+NTB）——<b>每一美元增量都有对应的验证或止损机制</b></div>
 </div>
-<div class="reveal"><button class="btn mini" onclick="document.getElementById('m-arg').classList.add('show')">📋 五模块论证明细表</button></div>
-<p class="note reveal" style="margin-top:10px">论证明细也可在钉钉终稿第八章查看</p></section>
+<div class="tw"><table><thead><tr><th>预算模块</th><th class="num">月度($)</th><th>论证依据（已验证的品类×策略表现）</th></tr></thead><tbody>
+<tr><td class="cat">存量盘</td><td class="num">7,500</td><td>H1已验证有效/合格 31 个组合、占 65% 花费（SD≤8%/SB≤20%）：三元催化×浏览再营销组合 $6,402/3.19%/2,147单；相似品定向 7 品类全胜（3.86%–6.18%，无一失败）；品牌旗舰店 1.96%/$1.9K/943单；点火系统多策略 5.26%；起发电机/燃油泵/散热器 4.63%–4.95%；高销链接三元催化 1.77%——预算用于已验证组合放量与领先节点防御（卡钳存量占比提至10%）</td></tr>
+<tr><td class="cat">增量①新增品线</td><td class="num">800</td><td>张紧器×浏览再营销 9.07%、×类目+SIM 8.40%，水泵×类目+SIM 5.84%——9月首月即逼近 8% 转正线，验证路径清晰；车灯总成 Q4 旺季＋SB活动已建待启动；轮毂附件待补充策略尝试</td></tr>
+<tr><td class="cat">增量②SBV专项</td><td class="num">1,000</td><td>历史三测未达线（40.58% 预警/两品类0单），但 SB 广泛/短语承担品牌新客 69%–81%，视频是补认知的必要形式；以新素材+4周 ACOS≤30% 门槛重测、投放品类待定，风险有闸门</td></tr>
+<tr><td class="cat">预备池与策略测试专项</td><td class="num">2,000</td><td>品类侧：P1四品类有真实市占零投放，用全店验证成功率最高的打法冷启动；策略侧：场内客群滤清器单点已验证 $912/4.98% 复制3品类、真价格细分 $196/0.8%–1.0% 待放大、AMC人群包零成本已建——统一4周转正/停投闸门，验证失败即回补存量</td></tr>
+<tr><td class="cat">全流域试点</td><td class="num">3,000</td><td>SBSD效率全部集中在漏斗中下层，上层认知流量空白；官方测试长期广告回报 +67%/新客成本 -29%；旺季造势（车灯）与品牌试点（张紧器/水泵）为最佳切入场景；$100/天为最低试点门槛</td></tr>
+</tbody></table></div>
+</div>
+</section>
 
 <!-- S12 附录 -->
 <section class="slide">
 <div class="shead"><span class="no">A</span><h2 class="editable">附录 · 口径与附件</h2><span class="sub">APPENDIX</span></div>
+<div class="slide-body">
 <ul class="tl reveal editable">
 <li class="big"><b>判定口径：</b>SD ≤8%有效 / 8–15%可用 / 15–25%低效 / &gt;25%或0单无效；SB ≤20%合格 / 20–30%待改善 / 30–50%预警 / &gt;50%或0单建议关停；花费&lt;$50 或仅1个月计为测试中</li>
 <li class="big"><b>数据源：</b>US8按月汇总导出（92活动/283条月度记录）；定向/关键词层经 CA4 投放词表×关键词表校验；市占数据：AM品类矩阵 2025.10–2026.09；与《Q3_SBSD投放总结报告》快照存在±3%以内差异，趋势一致</li>
@@ -321,21 +346,26 @@ padding:12px 30px;border-radius:26px;font-size:22px;z-index:10003;opacity:0;tran
 <a href="https://alidocs.dingtalk.com/i/nodes/QG53mjyd80R5o6dMTz6eN7ARV6zbX04v" target="_blank">BS部门SDSB半年表现与共性策略分析</a> ·
 <a href="https://alidocs.dingtalk.com/i/nodes/kDnRL6jAJM3zqQkvcXgjqP7OWyMoPYe1" target="_blank">站内广告素材</a></li>
 </ul>
-<p class="note reveal" style="margin-top:30px">导航：← → / 空格 翻页 ｜ F 全屏 ｜ E 编辑模式 ｜ 点击页码开目录 ｜ 打印=每页一张（Ctrl+P，含附录明细页）</p>
+<h3 style="color:var(--navy);font-size:26px;margin:20px 0 6px" class="editable">建议关停组合（&gt;50%或0单，共3个，策略不再尝试）</h3>
+<div class="tw"><table><thead><tr><th>品类</th><th>策略</th><th class="num">花费($)</th><th class="num">ACOS</th><th class="num">订单</th></tr></thead><tbody><tr><td class="cat">轮毂附件</td><td>SB-长尾/精准词</td><td class="num">203.11</td><td class="num" style="color:var(--bad)">56.68%</td><td class="num">9</td></tr><tr><td class="cat">滤清器</td><td>SB-商品集(自动)</td><td class="num">157.90</td><td class="num" style="color:var(--bad)">51.59%</td><td class="num">24</td></tr><tr><td class="cat">三元催化</td><td>SB-关键词(词组/语义)</td><td class="num">91.60</td><td class="num" style="color:var(--bad)">87.8%</td><td class="num">1</td></tr></tbody></table></div>
+<p class="note reveal" style="margin-top:20px">导航：← → / 空格 翻页 ｜ F 全屏 ｜ E 编辑模式 ｜ 点击页码开目录 ｜ 打印=每页一张（Ctrl+P，含附录明细页）</p>
+</div>
 </section>
 
 <!-- A2 附录明细一 -->
 <section class="slide">
 <div class="shead"><span class="no">A2</span><h2 class="editable">附录 · 31个有效/合格组合明细</h2><span class="sub">SD≤8%｜SB≤20% · 占65%花费</span></div>
-<div class="tw"><table><thead><tr><th>品类</th><th class="num">有效策略数</th><th>有效策略（SD≤8%｜SB≤20%，附实测ACOS）</th></tr></thead><tbody><tr><td class="cat">空调压缩机</td><td class="num">7</td><td>SD-类目定向 6.06%｜SD-相似品定向 5.63%｜SB-大词 10.98%｜SB-商品集(手动) 10.69%｜SB-车型词 14.02%｜SD-浏览再营销 2.0%｜SD-竞品ASIN定向 6.66%</td></tr><tr><td class="cat">点火系统</td><td class="num">4</td><td>SD-类目+浏览再营销 6.57%｜SD-类目+SIM 4.94%｜SD-浏览类似商品受众 4.18%｜SD-类目定向 3.72%</td></tr><tr><td class="cat">转向器</td><td class="num">3</td><td>SD-相似品定向 4.53%｜SB-商品集(手动) 14.15%｜SB-商品集(自动) 13.39%</td></tr><tr><td class="cat">三元催化</td><td class="num">2</td><td>SD-浏览再营销组合 3.19%｜SD-高销链接再营销 1.77%</td></tr><tr><td class="cat">起发电机</td><td class="num">2</td><td>SD-浏览再营销 4.21%｜SD-相似品定向 5.9%</td></tr><tr><td class="cat">燃油泵</td><td class="num">2</td><td>SD-相似品定向 4.85%｜SD-浏览再营销 2.44%</td></tr><tr><td class="cat">控制臂</td><td class="num">2</td><td>SD-浏览再营销 4.77%｜SD-类目+SIM 6.45%</td></tr><tr><td class="cat">滤清器</td><td class="num">2</td><td>SD-场内客群受众 4.95%｜SB-旗舰店子页面 6.22%</td></tr><tr><td class="cat">散热器</td><td class="num">2</td><td>SD-相似品定向 6.0%｜SB-商品集 2.27%</td></tr><tr><td class="cat">品牌旗舰店</td><td class="num">1</td><td>SB-品牌旗舰店 1.96%</td></tr><tr><td class="cat">卡钳</td><td class="num">1</td><td>SD-相似品定向 6.18%</td></tr><tr><td class="cat">轮毂轴承</td><td class="num">1</td><td>SD-高销链接再营销 7.35%</td></tr><tr><td class="cat">减震器</td><td class="num">1</td><td>SD-相似品定向 4.81%</td></tr><tr><td class="cat">进气套件</td><td class="num">1</td><td>SD-竞品ASIN定向 5.82%</td></tr></tbody></table></div>
+<div class="slide-body"><div class="tw"><table><thead><tr><th>品类</th><th class="num">有效策略数</th><th>有效策略（SD≤8%｜SB≤20%，附实测ACOS）</th></tr></thead><tbody><tr><td class="cat">空调压缩机</td><td class="num">7</td><td>SD-类目定向 6.06%｜SD-相似品定向 5.63%｜SB-大词 10.98%｜SB-商品集(手动) 10.69%｜SB-车型词 14.02%｜SD-浏览再营销 2.0%｜SD-竞品ASIN定向 6.66%</td></tr><tr><td class="cat">点火系统</td><td class="num">4</td><td>SD-类目+浏览再营销 6.57%｜SD-类目+SIM 4.94%｜SD-浏览类似商品受众 4.18%｜SD-类目定向 3.72%</td></tr><tr><td class="cat">转向器</td><td class="num">3</td><td>SD-相似品定向 4.53%｜SB-商品集(手动) 14.15%｜SB-商品集(自动) 13.39%</td></tr><tr><td class="cat">三元催化</td><td class="num">2</td><td>SD-浏览再营销组合 3.19%｜SD-高销链接再营销 1.77%</td></tr><tr><td class="cat">起发电机</td><td class="num">2</td><td>SD-浏览再营销 4.21%｜SD-相似品定向 5.9%</td></tr><tr><td class="cat">燃油泵</td><td class="num">2</td><td>SD-相似品定向 4.85%｜SD-浏览再营销 2.44%</td></tr><tr><td class="cat">控制臂</td><td class="num">2</td><td>SD-浏览再营销 4.77%｜SD-类目+SIM 6.45%</td></tr><tr><td class="cat">滤清器</td><td class="num">2</td><td>SD-场内客群受众 4.95%｜SB-旗舰店子页面 6.22%</td></tr><tr><td class="cat">散热器</td><td class="num">2</td><td>SD-相似品定向 6.0%｜SB-商品集 2.27%</td></tr><tr><td class="cat">品牌旗舰店</td><td class="num">1</td><td>SB-品牌旗舰店 1.96%</td></tr><tr><td class="cat">卡钳</td><td class="num">1</td><td>SD-相似品定向 6.18%</td></tr><tr><td class="cat">轮毂轴承</td><td class="num">1</td><td>SD-高销链接再营销 7.35%</td></tr><tr><td class="cat">减震器</td><td class="num">1</td><td>SD-相似品定向 4.81%</td></tr><tr><td class="cat">进气套件</td><td class="num">1</td><td>SD-竞品ASIN定向 5.82%</td></tr></tbody></table></div></div>
 </section>
 
 <!-- A3 附录明细二 -->
 <section class="slide">
 <div class="shead"><span class="no">A3</span><h2 class="editable">附录 · 可用/预警18个 + 关停3个明细</h2><span class="sub">判定口径见附录A</span></div>
+<div class="slide-body">
 <div class="tw"><table><thead><tr><th>品类</th><th class="num">策略数</th><th>策略清单（附档位）</th></tr></thead><tbody><tr><td class="cat">滤清器</td><td class="num">6</td><td>SD-大促节点 8.07%<span class="chip c-ok">可用</span>｜SD-浏览类似商品受众 9.28%<span class="chip c-ok">可用</span>｜SD-类目定向 8.08%<span class="chip c-ok">可用</span>｜SB-关键词(词组/语义) 21.36%<span class="chip c-warn">待改善</span>｜SB-商品集(手动) 35.81%<span class="chip c-warn">预警</span>｜SD-本品再营销(品牌防御) 21.05%<span class="chip c-warn">低效</span></td></tr><tr><td class="cat">点火系统</td><td class="num">1</td><td>SD-浏览再营销 8.46%<span class="chip c-ok">可用</span></td></tr><tr><td class="cat">空调压缩机</td><td class="num">2</td><td>SB-关键词(词组/语义) 20.77%<span class="chip c-warn">待改善</span>｜SD-本品再营销(品牌防御) 8.7%<span class="chip c-ok">可用</span></td></tr><tr><td class="cat">怠速电磁阀</td><td class="num">1</td><td>SD-类目定向 8.16%<span class="chip c-ok">可用</span></td></tr><tr><td class="cat">燃油泵</td><td class="num">1</td><td>SB-车型词 20.72%<span class="chip c-warn">待改善</span></td></tr><tr><td class="cat">卡钳</td><td class="num">2</td><td>SD-类目定向 9.29%<span class="chip c-ok">可用</span>｜SB-SBV视频 40.58%<span class="chip c-warn">预警</span></td></tr><tr><td class="cat">轮毂附件</td><td class="num">1</td><td>SD-类目定向 9.12%<span class="chip c-ok">可用</span></td></tr><tr><td class="cat">刹车盘片</td><td class="num">1</td><td>SB-大词 23.3%<span class="chip c-warn">待改善</span></td></tr><tr><td class="cat">空调鼓风机</td><td class="num">1</td><td>SD-类目+SIM 10.1%<span class="chip c-ok">可用</span></td></tr><tr><td class="cat">进气套件</td><td class="num">1</td><td>SB-旗舰店子页面 35.69%<span class="chip c-warn">预警</span></td></tr><tr><td class="cat">控制臂</td><td class="num">1</td><td>SB-商品集(手动) 30.66%<span class="chip c-warn">预警</span></td></tr></tbody></table></div>
 <h3 style="color:var(--navy);font-size:26px;margin:14px 0 4px" class="editable">建议关停（&gt;50%或0单，策略不再尝试）</h3>
 <div class="tw"><table><thead><tr><th>品类</th><th>策略</th><th class="num">花费($)</th><th class="num">ACOS</th><th class="num">订单</th></tr></thead><tbody><tr><td class="cat">轮毂附件</td><td>SB-长尾/精准词</td><td class="num">203.11</td><td class="num" style="color:var(--bad)">56.68%</td><td class="num">9</td></tr><tr><td class="cat">滤清器</td><td>SB-商品集(自动)</td><td class="num">157.90</td><td class="num" style="color:var(--bad)">51.59%</td><td class="num">24</td></tr><tr><td class="cat">三元催化</td><td>SB-关键词(词组/语义)</td><td class="num">91.60</td><td class="num" style="color:var(--bad)">87.8%</td><td class="num">1</td></tr></tbody></table></div>
+</div>
 </section>
 
 </main></div>
