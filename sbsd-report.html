@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SBSD投放与策略综合报告 · 2026年4–9月</title>
+<style>
+:root{--bg:#F5F7FA;--panel:#FFFFFF;--line:#E2E8F0;--line2:#CBD5E1;--ink:#1F2937;--dim:#64748B;
+--blue:#2E75B6;--navy:#1F3864;--tint:#EAF1F9;--good:#15803D;--goodbg:#DCFCE7;--ok:#1D4ED8;--okbg:#DBEAFE;
+--warn:#B45309;--warnbg:#FEF3C7;--bad:#B91C1C;--badbg:#FEE2E2;--test:#475569;--testbg:#F1F5F9}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+font-size:14px;line-height:1.65;font-variant-numeric:tabular-nums}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+#bar{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,.97);border-bottom:1px solid var(--line);
+display:flex;align-items:center;gap:14px;padding:0 18px;height:46px;backdrop-filter:blur(4px)}
+#bar .logo{color:var(--navy);font-weight:700;white-space:nowrap}
+#bar nav{display:flex;gap:2px;overflow-x:auto;flex:1;scrollbar-width:none}
+#bar nav::-webkit-scrollbar{display:none}
+#bar nav a{color:var(--dim);padding:4px 10px;white-space:nowrap;font-size:12.5px;border-radius:4px}
+#bar nav a:hover,#bar nav a.act{color:var(--navy);background:var(--tint);text-decoration:none}
+#bar .stat{color:var(--dim);font-size:11.5px;white-space:nowrap}
+#bar .stat b{color:var(--blue)}
+#prog{position:fixed;top:46px;left:0;height:3px;background:var(--blue);width:0;z-index:50}
+main{max-width:1180px;margin:0 auto;padding:72px 22px 60px}
+section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin:16px 0;
+box-shadow:0 1px 3px rgba(31,56,100,.05);scroll-margin-top:64px}
+.sechead{display:flex;align-items:baseline;gap:12px;border-bottom:2px solid var(--tint);padding-bottom:8px;margin-bottom:14px}
+.sechead .no{color:var(--blue);font-size:12px;font-weight:700}
+.sechead h2{margin:0;font-size:19px;color:var(--navy)}
+.sechead .sub{color:var(--dim);font-size:11.5px;margin-left:auto}
+h3{font-size:14.5px;color:var(--navy);margin:18px 0 8px}
+p{margin:8px 0}
+.note{color:var(--dim);font-size:12px}
+b{color:var(--navy)}
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:14px 0}
+.kpi{background:var(--tint);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.kpi .l{color:var(--dim);font-size:11px}
+.kpi .v{font-size:21px;color:var(--navy);font-weight:700;margin-top:2px}
+.kpi .v small{font-size:12px;color:var(--dim);font-weight:400}
+.kpi.hl{background:var(--navy)}.kpi.hl .l{color:#B9CFEA}.kpi.hl .v{color:#fff}
+/* 摘要卡 */
+.sumgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sumcard{background:#FBFCFE;border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:8px;padding:11px 14px;font-size:13px}
+.sumcard .t{color:var(--navy);font-weight:700;margin-bottom:3px;font-size:13.5px}
+/* chips */
+.chip{display:inline-block;font-size:11.5px;padding:1px 8px;border-radius:10px;font-weight:600;white-space:nowrap}
+.c-good{background:var(--goodbg);color:var(--good)}
+.c-ok{background:var(--okbg);color:var(--ok)}
+.c-warn{background:var(--warnbg);color:var(--warn)}
+.c-bad{background:var(--badbg);color:var(--bad)}
+.c-test{background:var(--testbg);color:var(--test)}
+.tg{display:inline-block;font-size:10.5px;padding:0 6px;margin-left:4px;border-radius:8px}
+.t-good{background:var(--goodbg);color:var(--good)}.t-ok{background:var(--okbg);color:var(--ok)}
+.t-warn{background:var(--warnbg);color:var(--warn)}.t-bad{background:var(--badbg);color:var(--bad)}
+/* 横条图 */
+.hrow{display:grid;grid-template-columns:150px 1fr 74px 52px 62px;gap:8px;align-items:center;margin:7px 0}
+.hl{text-align:right;font-size:12.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hbar{height:16px;background:#EDF2F7;border-radius:4px;overflow:hidden}
+.hb{display:block;height:100%;background:var(--blue);width:0;transition:width 1s cubic-bezier(.2,.8,.2,1);border-radius:4px}
+.hb.good{background:#34A853}.hb.ok{background:var(--blue)}.hb.warn{background:#E8A33D}
+.hv{font-size:12.5px;color:var(--navy);font-weight:600;text-align:right}
+.hp{font-size:11.5px;color:var(--dim)}
+/* SVG */
+.chart{border:1px solid var(--line);border-radius:10px;background:#FBFCFE;padding:14px;margin:10px 0}
+.chart svg{width:100%;height:auto;display:block}
+.bar{fill:#9DC3E6}.line{fill:none;stroke:var(--navy);stroke-width:2.2}.dot{fill:var(--navy)}
+.bl{fill:var(--blue);font-size:11px;text-anchor:middle;font-weight:600}
+.al{fill:var(--navy);font-size:10.5px;text-anchor:middle}
+.xl{fill:var(--dim);font-size:11px;text-anchor:middle}
+.axis{stroke:var(--line2)}
+.leg{display:flex;gap:18px;color:var(--dim);font-size:11.5px;margin-top:6px}
+.leg i{display:inline-block;width:10px;height:10px;margin-right:5px;vertical-align:-1px;border-radius:2px}
+/* 表格 */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:8px;margin:8px 0}
+table{border-collapse:collapse;width:100%;background:#fff;font-size:12.5px}
+th{background:var(--navy);color:#fff;font-size:11.5px;font-weight:600;text-align:left;padding:7px 10px;white-space:nowrap}
+td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:hover td{background:var(--tint)}
+tr.sum td{background:var(--tint);color:var(--navy);font-weight:700}
+.num{text-align:right;white-space:nowrap}
+.cat{font-weight:600;white-space:nowrap}
+.strats{line-height:1.9}
+/* 分布条 */
+.dist{display:flex;gap:3px;margin:10px 0;border-radius:8px;overflow:hidden}
+.segs{padding:9px 10px;font-size:11.5px;min-width:0;overflow:hidden;white-space:nowrap}
+.s-good{background:var(--goodbg);color:var(--good)}.s-ok{background:var(--okbg);color:var(--ok)}
+.s-warn{background:var(--warnbg);color:var(--warn)}.s-bad{background:var(--badbg);color:var(--bad)}
+.s-test{background:var(--testbg);color:var(--test)}
+/* 预算构成 */
+.bsegs{padding:12px 10px;font-size:12px;color:#fff;text-align:center;min-width:0;overflow:hidden;white-space:nowrap;line-height:1.5}
+.budtotal{display:flex;justify-content:space-between;align-items:baseline;margin:8px 2px}
+.budtotal b{font-size:22px;color:var(--navy)}
+/* 折叠 */
+.fold{border:1px solid var(--line);border-radius:8px;margin:10px 0;overflow:hidden;background:#fff}
+.foldbtn{display:flex;width:100%;align-items:center;gap:8px;background:var(--tint);border:none;color:var(--navy);
+font-size:13px;font-weight:600;padding:9px 14px;cursor:pointer;font-family:inherit}
+.foldbtn:hover{background:#DCE9F5}
+.foldbtn .arr{margin-left:auto;transition:transform .2s;color:var(--blue)}
+.fold.open .foldbtn .arr{transform:rotate(90deg)}
+.foldbody{display:none;padding:10px 12px;border-top:1px solid var(--line)}
+.fold.open .foldbody{display:block}
+/* 要点卡 */
+.points{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.point{background:#FBFCFE;border:1px solid var(--line);border-top:3px solid var(--blue);border-radius:8px;padding:11px 13px;font-size:12.8px}
+.point .t{font-weight:700;color:var(--navy);margin-bottom:3px}
+ul.tl{list-style:none;padding:0;margin:8px 0}
+ul.tl li{padding:5px 0 5px 18px;position:relative}
+ul.tl li::before{content:"";position:absolute;left:2px;top:13px;width:7px;height:7px;border-radius:50%;background:var(--blue)}
+.rv{opacity:0;transform:translateY(14px);transition:opacity .5s ease,transform .5s ease}
+.rv.on{opacity:1;transform:none}
+/* 市占双条 */
+.msrow{display:grid;grid-template-columns:190px 1fr 58px 1fr 58px;gap:8px;align-items:center;margin:8px 0}
+.msrow .rk{font-style:normal;color:var(--dim);font-size:11px;margin-left:4px}
+.pg{display:block;height:100%;background:#34A853;border-radius:4px;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.pr{display:block;height:100%;background:#E15759;border-radius:4px;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.zero{color:var(--bad);font-size:11.5px;font-weight:600}
+footer{border-top:1px solid var(--line);margin-top:40px;padding:16px 0;color:var(--dim);font-size:11.5px}
+.btn{display:inline-block;background:var(--navy);color:#fff;padding:8px 18px;border-radius:8px;font-size:13px;margin:8px 10px 8px 0}
+.btn:hover{background:var(--blue);text-decoration:none}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(3,1fr)}.sumgrid,.points{grid-template-columns:1fr}}
+@media (max-width:600px){.kpis{grid-template-columns:repeat(2,1fr)}.hrow{grid-template-columns:96px 1fr 60px 46px 56px}}
+@media print{#bar,#prog{display:none}body{background:#fff}.rv{opacity:1;transform:none}.foldbody{display:block!important}}
+</style>
+</head>
+<body>
+<div id="bar"><span class="logo">SBSD 半年度报告</span>
+<nav>
+<a href="#s1">摘要</a><a href="#s2">整体表现</a><a href="#s3">品类分层</a><a href="#s4">策略验证</a>
+<a href="#s45">双端共性</a><a href="#s5">市占错配</a><a href="#s6">策略全景</a><a href="#s7">Q4方案</a><a href="#s8">预算论证</a><a href="#s9">附录</a>
+</nav>
+<span class="stat">阅读 <b id="pct">0%</b></span></div>
+<div id="prog"></div>
+<main>
+
+<section id="s1" class="rv">
+<p class="note">2026年4–9月｜SB+SD｜US市场6店铺92活动｜口径：US8导出（与Q3报告快照差异±3%以内）｜生成 2026-10</p>
+<h1 style="font-size:25px;margin:8px 0;color:var(--navy)">SBSD投放与策略综合报告<span style="color:var(--dim);font-size:15px"> · 2026年4–9月</span></h1>
+<div class="kpis" style="margin-top:14px">
+<div class="kpi hl"><div class="l">总花费</div><div class="v">$<span class="cu" data-t="47944">0</span></div></div>
+<div class="kpi hl"><div class="l">广告销售额</div><div class="v">$<span class="cu" data-t="931377">0</span></div></div>
+<div class="kpi hl"><div class="l">订单</div><div class="v"><span class="cu" data-t="17545">0</span></div></div>
+<div class="kpi"><div class="l">整体 ACOS</div><div class="v" style="color:var(--good)">5.15<small>%</small></div></div>
+<div class="kpi"><div class="l">有效/合格组合</div><div class="v">31<small> / 65%花费</small></div></div>
+<div class="kpi"><div class="l">Q4月度总盘</div><div class="v">$14,300</div></div>
+</div>
+<div class="sumgrid">
+<div class="sumcard"><div class="t">总量与效率</div>半年总花费 $47,944.06、广告销售额 $931,376.82、订单 17,545 单、<b>ACOS 5.15%</b>——Q2（$21,174/5.13%）与 Q3（$26,770/5.16%）两季效率几乎持平，<b>放量未牺牲效率</b></div>
+<div class="sumcard"><div class="t">节奏</div>4–5月 $6.0–6.3K 打底 → 6月新策略批次上线冲至 $8.9K → 7月峰值 $10.2K → <b>9月收敛 $7.6K 且 ACOS 4.66% 为半年最优</b></div>
+<div class="sumcard"><div class="t">结构</div>SD 占 79%（ACOS 4.89% / CPC $0.25）承担规模，SB 占 21%（6.44% / $0.55）承担品牌与引流</div>
+<div class="sumcard"><div class="t">策略验证</div>70个「品类×策略」组合中<b>已验证有效/合格 31 个（占 65% 花费）</b>、可用/待改善 13 个、低效/预警 5 个、建议关停 3 个；SD定向类打法（相似品/浏览再营销/浏览类似商品受众）是全局效率引擎，SB仅旗舰店与高客单品类商品集达线</div>
+<div class="sumcard"><div class="t">市占错配</div>卡钳市占 37.4%（KAX#1）但广告花费占比仅 3.2%；转向助力泵/制动总泵/半轴/发动机维修包有真实市占（3.8%–7.3%）却半年零投放</div>
+<div class="sumcard"><div class="t">Q4 定盘</div>月度总盘 <b>$14,300</b> ＝存量 7,500（9月实际取整，不放大基础盘）＋增量 1,800（新增品线 800 / SBV 1,000）＋全流域试点 3,000（$100/天，11月启动一季度）＋预备池与策略测试专项 2,000（交叉验证、合并管理）；存量层级 6:3:1；张紧器/水泵 9月已抢跑且首月即近转正线</div>
+</div>
+</section>
+
+<section id="s2" class="rv">
+<div class="sechead"><span class="no">01</span><h2>整体投放表现</h2><span class="sub">含BS部三线 · 月度趋势</span></div>
+<h3>三部门花费构成（4–6月样例口径，销售中台为本报告主体）</h3>
+<div class="chart" style="background:#fff"><div class="hrow"><span class="hl">销售中台（本报告主体）</span><div class="hbar"><i class="hb ok" data-w="100" style="width:0"></i></div><span class="hv">47,944</span><span class="chip c-good">5.15%</span></div><div class="hrow"><span class="hl">BS部门自投</span><div class="hbar"><i class="hb ok" data-w="7" style="width:0"></i></div><span class="hv">3,512</span><span class="chip c-ok">6.60%</span></div><div class="hrow"><span class="hl">运营自投</span><div class="hbar"><i class="hb ok" data-w="14" style="width:0"></i></div><span class="hv">6,699</span><span class="chip c-warn">10.08%</span></div>
+<div class="leg"><span><i style="background:#34A853"></i>ACOS&lt;6% <i style="background:var(--blue);margin-left:12px"></i>6–8% <i style="background:#E8A33D;margin-left:12px"></i>&gt;8%</span><span style="margin-left:auto">整体（含BS部）$58,154.83 · ACOS 5.53% · 有效广告320条</span></div>
+</div>
+<div class="fold"><button class="foldbtn">📋 三部门明细数据<span class="arr">▸</span></button><div class="foldbody">
+<div class="tw"><table><thead><tr><th>条线</th><th class="num">花费($)</th><th class="num">销售额($)</th><th class="num">有效广告数</th><th class="num">ACOS</th></tr></thead>
+<tbody>
+<tr class="sum"><td>整体（包含BS部）</td><td class="num">58,154.83</td><td class="num">1,050,851.06</td><td class="num">320</td><td class="num">5.53%</td></tr>
+<tr><td>运营自投</td><td class="num">6,698.72</td><td class="num">66,434.61</td><td class="num">208</td><td class="num">10.08%</td></tr>
+<tr><td class="cat" style="color:var(--blue)">销售中台投放（本报告主体）</td><td class="num">47,943.67</td><td class="num">931,216.84</td><td class="num">92</td><td class="num">5.15%</td></tr>
+<tr><td>BS部门自投</td><td class="num">3,512.44</td><td class="num">53,199.61</td><td class="num">20</td><td class="num">6.60%</td></tr>
+</tbody></table></div>
+<p class="note">注：有效＝周期内有广告花费产出、为品类带来曝光和点击。</p>
+</div></div>
+<h3>月度趋势：6月放量、9月最优</h3>
+<div class="chart"><svg viewBox="0 0 860 230"><line x1="40" y1="202" x2="852" y2="202" class="axis"/><rect x="70.0" y="99.6" width="85.3" height="102.4" class="bar"/><text x="112.7" y="93.6" class="bl">6.3K</text><text x="112.7" y="222" class="xl">04月</text><rect x="203.3" y="104.6" width="85.3" height="97.4" class="bar"/><text x="246.0" y="98.6" class="bl">6.0K</text><text x="246.0" y="222" class="xl">05月</text><rect x="336.7" y="58.1" width="85.3" height="143.9" class="bar"/><text x="379.3" y="52.1" class="bl">8.9K</text><text x="379.3" y="222" class="xl">06月</text><rect x="470.0" y="35.9" width="85.3" height="166.1" class="bar"/><text x="512.7" y="29.9" class="bl">10.2K</text><text x="512.7" y="222" class="xl">07月</text><rect x="603.3" y="56.7" width="85.3" height="145.3" class="bar"/><text x="646.0" y="50.7" class="bl">9.0K</text><text x="646.0" y="222" class="xl">08月</text><rect x="736.7" y="78.8" width="85.3" height="123.2" class="bar"/><text x="779.3" y="72.8" class="bl">7.6K</text><text x="779.3" y="222" class="xl">09月</text><polyline points="112.7,143.7 246.0,133.5 379.3,52.4 512.7,65.0 646.0,103.9 779.3,146.2" class="line"/><circle cx="112.7" cy="143.7" r="3.2" class="dot"/><text x="112.7" y="135.7" class="al">4.69%</text><circle cx="246.0" cy="133.5" r="3.2" class="dot"/><text x="246.0" y="125.5" class="al">4.81%</text><circle cx="379.3" cy="52.4" r="3.2" class="dot"/><text x="379.3" y="44.4" class="al">5.77%</text><circle cx="512.7" cy="65.0" r="3.2" class="dot"/><text x="512.7" y="57.0" class="al">5.62%</text><circle cx="646.0" cy="103.9" r="3.2" class="dot"/><text x="646.0" y="95.9" class="al">5.16%</text><circle cx="779.3" cy="146.2" r="3.2" class="dot"/><text x="779.3" y="138.2" class="al">4.66%</text></svg>
+<div class="leg"><span><i style="background:#9DC3E6"></i>月度花费（柱，K美元）</span><span><i style="background:var(--navy)"></i>ACOS%（线，4–6.2%区间）</span><span style="margin-left:auto">Q2 $21,174/5.13% → Q3 $26,770/5.16%</span></div></div>
+<ul class="tl">
+<li><b>6月是结构拐点：</b>相似品×7品类、浏览再营销、场内客群等新策略批次集中上线，<b>花费环比 +47.8% 的同时 ACOS 仅从 4.81% 升至 5.77%</b>——量增未失效率</li>
+<li><b>Q3预算执行：</b>月预算 $8,000 基准下，7月 127.9% 超支（6月大促策略留存）、8月 111.9%、<b>9月 94.9% 回归线内</b>——季度后半程自我纠偏完成</li>
+<li><b>9月 ACOS 4.66% 为半年最优：</b>花费收敛与结构优化同步发生，8,000 美元量级已足够支撑产出，Q4 加码应投向结构性机会而非单纯放量</li>
+</ul>
+<div class="fold"><button class="foldbtn">📋 月度/Q2Q3 明细表<span class="arr">▸</span></button><div class="foldbody">
+<div class="tw"><table><thead><tr><th>月份</th><th class="num">花费($)</th><th class="num">销售额($)</th><th class="num">订单</th><th class="num">ACOS</th><th class="num">环比</th></tr></thead>
+<tbody><tr><td>2026-04</td><td class="num">6,307.21</td><td class="num">134,572.73</td><td class="num">2,723</td><td class="num">4.69%</td><td class="num">—</td></tr><tr><td>2026-05</td><td class="num">6,000.52</td><td class="num">124,789.22</td><td class="num">2,497</td><td class="num">4.81%</td><td class="num">-4.9%</td></tr><tr><td>2026-06</td><td class="num">8,866.25</td><td class="num">153,582.82</td><td class="num">2,786</td><td class="num">5.77%</td><td class="num">+47.8%</td></tr><tr><td>2026-07</td><td class="num">10,230.22</td><td class="num">182,002.97</td><td class="num">3,472</td><td class="num">5.62%</td><td class="num">+15.4%</td></tr><tr><td>2026-08</td><td class="num">8,951.28</td><td class="num">173,544.91</td><td class="num">3,219</td><td class="num">5.16%</td><td class="num">-12.5%</td></tr><tr><td>2026-09</td><td class="num">7,588.58</td><td class="num">162,884.17</td><td class="num">2,848</td><td class="num">4.66%</td><td class="num">-15.2%</td></tr><tr class="sum"><td>合计</td><td class="num">47,944.06</td><td class="num">931,376.82</td><td class="num">17,545</td><td class="num">5.15%</td><td class="num">—</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>季度</th><th class="num">花费($)</th><th class="num">销售额($)</th><th class="num">订单</th><th class="num">ACOS</th><th class="num">月均($)</th></tr></thead>
+<tbody><tr><td>Q2（4–6月）</td><td class="num">21,173.98</td><td class="num">412,944.77</td><td class="num">8,006</td><td class="num">5.13%</td><td class="num">7,057.99</td></tr>
+<tr><td>Q3（7–9月）</td><td class="num">26,770.08</td><td class="num">518,432.05</td><td class="num">9,539</td><td class="num">5.16%</td><td class="num">8,923.36</td></tr></tbody></table></div>
+</div></div>
+</section>
+
+<section id="s3" class="rv">
+<div class="sechead"><span class="no">02</span><h2>品类结构与效率分层</h2><span class="sub">TOP12 · 条长=花费 · 色块=ACOS档</span></div>
+<div class="chart" style="background:#fff"><div class="hrow"><span class="hl">滤清器</span><div class="hbar"><i class="hb warn" data-w="100" style="width:0"></i></div><span class="hv">12,080</span><span class="hp">25.2%</span><span class="chip c-warn">9.07%</span></div><div class="hrow"><span class="hl">三元催化</span><div class="hbar"><i class="hb good" data-w="63" style="width:0"></i></div><span class="hv">7,603</span><span class="hp">15.9%</span><span class="chip c-good">2.91%</span></div><div class="hrow"><span class="hl">点火系统</span><div class="hbar"><i class="hb ok" data-w="60" style="width:0"></i></div><span class="hv">7,207</span><span class="hp">15.0%</span><span class="chip c-ok">5.26%</span></div><div class="hrow"><span class="hl">空调压缩机</span><div class="hbar"><i class="hb ok" data-w="33" style="width:0"></i></div><span class="hv">3,940</span><span class="hp">8.2%</span><span class="chip c-ok">6.95%</span></div><div class="hrow"><span class="hl">转向器</span><div class="hbar"><i class="hb ok" data-w="22" style="width:0"></i></div><span class="hv">2,622</span><span class="hp">5.5%</span><span class="chip c-ok">7.19%</span></div><div class="hrow"><span class="hl">燃油泵</span><div class="hbar"><i class="hb good" data-w="19" style="width:0"></i></div><span class="hv">2,255</span><span class="hp">4.7%</span><span class="chip c-good">4.95%</span></div><div class="hrow"><span class="hl">起发电机</span><div class="hbar"><i class="hb good" data-w="16" style="width:0"></i></div><span class="hv">1,988</span><span class="hp">4.1%</span><span class="chip c-good">4.68%</span></div><div class="hrow"><span class="hl">品牌旗舰店</span><div class="hbar"><i class="hb good" data-w="16" style="width:0"></i></div><span class="hv">1,925</span><span class="hp">4.0%</span><span class="chip c-good">1.96%</span></div><div class="hrow"><span class="hl">卡钳</span><div class="hbar"><i class="hb ok" data-w="13" style="width:0"></i></div><span class="hv">1,540</span><span class="hp">3.2%</span><span class="chip c-ok">7.42%</span></div><div class="hrow"><span class="hl">控制臂</span><div class="hbar"><i class="hb ok" data-w="12" style="width:0"></i></div><span class="hv">1,504</span><span class="hp">3.1%</span><span class="chip c-ok">5.87%</span></div><div class="hrow"><span class="hl">散热器</span><div class="hbar"><i class="hb good" data-w="10" style="width:0"></i></div><span class="hv">1,208</span><span class="hp">2.5%</span><span class="chip c-good">4.63%</span></div><div class="hrow"><span class="hl">进气套件</span><div class="hbar"><i class="hb ok" data-w="7" style="width:0"></i></div><span class="hv">906</span><span class="hp">1.9%</span><span class="chip c-ok">7.59%</span></div>
+<div class="leg"><span><i style="background:#34A853"></i>ACOS&lt;5% 第一梯队 <i style="background:var(--blue);margin-left:12px"></i>5–8% 第二梯队 <i style="background:#E8A33D;margin-left:12px"></i>&gt;8% 引流定位</span></div></div>
+<ul class="tl">
+<li><b>效率分层：</b>第一梯队 ACOS&lt;5%（三元催化 2.91% / 品牌旗舰店 1.96% / 散热器 4.63% / 起发电机 4.68% / 燃油泵 4.95%）——预算优先保障；第二梯队 5–8%（转向器/点火/控制臂/空调压缩机/减震器）——按市占与机会放量；滤清器 9.07% 为引流定位单独管理</li>
+<li><b>滤清器是全店引流引擎：</b>H1花费 $12,080（25.2%）、7,161 单，ACOS 9.07% 在引流定位下可接受，但占比挤占卡位机会，<b>Q4 压缩至 16% 让位卡位</b></li>
+<li><b>收缩/暂停验证：</b>刹车盘片 H1 ACOS 23%（品牌试点继续尝试）＋9月新品测试 $77 零单、轮毂附件 SB长尾 56.7%——前两者维持暂停；怠速电磁阀与空调鼓风机 H1 实测 8–10% 可用档，可保留小预算控投</li>
+</ul>
+<div class="fold"><button class="foldbtn">📋 品类TOP12明细表<span class="arr">▸</span></button><div class="foldbody">
+<div class="tw"><table><thead><tr><th>品类</th><th class="num">H1花费($)</th><th class="num">占比</th><th class="num">ACOS</th><th class="num">订单</th></tr></thead>
+<tbody><tr><td class="cat">滤清器</td><td class="num">12,080</td><td class="num">25.2%</td><td class="num">9.07%</td><td class="num">7,161</td></tr><tr><td class="cat">三元催化</td><td class="num">7,603</td><td class="num">15.9%</td><td class="num">2.91%</td><td class="num">2,723</td></tr><tr><td class="cat">点火系统</td><td class="num">7,207</td><td class="num">15.0%</td><td class="num">5.26%</td><td class="num">2,460</td></tr><tr><td class="cat">空调压缩机</td><td class="num">3,940</td><td class="num">8.2%</td><td class="num">6.95%</td><td class="num">527</td></tr><tr><td class="cat">转向器</td><td class="num">2,622</td><td class="num">5.5%</td><td class="num">7.19%</td><td class="num">382</td></tr><tr><td class="cat">燃油泵</td><td class="num">2,255</td><td class="num">4.7%</td><td class="num">4.95%</td><td class="num">769</td></tr><tr><td class="cat">起发电机</td><td class="num">1,988</td><td class="num">4.1%</td><td class="num">4.68%</td><td class="num">530</td></tr><tr><td class="cat">品牌旗舰店</td><td class="num">1,925</td><td class="num">4.0%</td><td class="num">1.96%</td><td class="num">943</td></tr><tr><td class="cat">卡钳</td><td class="num">1,540</td><td class="num">3.2%</td><td class="num">7.42%</td><td class="num">339</td></tr><tr><td class="cat">控制臂</td><td class="num">1,504</td><td class="num">3.1%</td><td class="num">5.87%</td><td class="num">339</td></tr><tr><td class="cat">散热器</td><td class="num">1,208</td><td class="num">2.5%</td><td class="num">4.63%</td><td class="num">373</td></tr><tr><td class="cat">进气套件</td><td class="num">906</td><td class="num">1.9%</td><td class="num">7.59%</td><td class="num">262</td></tr></tbody></table></div>
+</div></div>
+</section>
+
+<section id="s4" class="rv">
+<div class="sechead"><span class="no">03</span><h2>品类×策略组合验证</h2><span class="sub">70组合 · 明细默认折叠</span></div>
+<div class="dist"><div class="segs s-good" style="flex:31201.5" title="有效/合格 31 · $31,202"><span>有效/合格 31</span></div><div class="segs s-ok" style="flex:14040.56" title="可用/待改善 13 · $14,041"><span>可用/待改善 13</span></div><div class="segs s-warn" style="flex:1384.09" title="低效/预警 5 · $1,384"><span>低效/预警 5</span></div><div class="segs s-bad" style="flex:452.61" title="关停 3 · $453"><span>关停 3</span></div><div class="segs s-test" style="flex:865.3000000000001" title="测试中 18 · $865"><span>测试中 18</span></div></div>
+<ul class="tl">
+<li><b>可复制打法：</b>相似品定向 7 品类全胜（3.9%–6.2%）；浏览再营销(类似商品)组合为 SD 王牌（三元催化 $6,402/3.19%/2,147单，真价格细分 $196@0.8–1.0% 待放大）；再营销族（浏览/高销链接）全面达线；场内客群受众 $912/4.98% 已验证</li>
+<li><b>SB合格面：</b>品牌旗舰店 1.96% 标杆；商品集仅高客单品类达线（散热器 2.27%/转向器 13.4–14.2%/空压 10.7%）；空压大词 10.98%/车型词 14.02% 合格</li>
+<li><b>SD侧可用档维持控本：</b>滤清大盘（大促 8.07%/类目 8.08%/类似商品受众 9.28%）、点火浏览再营销 8.46% 等；购买再营销（买过）$411/5.65% 有效但量级未打开，适合复购品类放大</li>
+</ul>
+<h3>4.4 测试中与预备池</h3>
+<ul class="tl">
+<li><b>增量品线 9月抢跑且起步良好：</b>张紧器（浏览再营销 9.07% / 类目+SIM 8.40%）、水泵（类目+SIM 5.84%）<b>首月即逼近转正线</b></li>
+<li>SBV 三测均未达线（卡钳 40.58% 预警、两品类 0 单）——<b>Q4 以 $1,000/月专项＋新素材重测（仅滤清器+车灯，4周 ACOS≤30% 闸门，不达标回补 SD）</b></li>
+<li>预备池 P1（转向助力泵/制动总泵/半轴/发动机维修包）半年零投放确认——<b>Q4 纳入 $2,000/月专项盘（P1冷启动 $800 配额）</b>，相似品+浏览再营销双开冷启动</li>
+</ul>
+<div class="fold"><button class="foldbtn">📋 31个有效/合格组合明细（按品类）<span class="arr">▸</span></button><div class="foldbody">
+<div class="tw"><table><thead><tr><th>品类</th><th class="num">有效策略数</th><th>有效策略（附实测ACOS）</th></tr></thead><tbody><tr><td class="cat">空调压缩机</td><td class="num">7</td><td class="strats">SD-类目定向 6.06%｜SD-相似品定向 5.63%｜SB-大词 10.98%｜SB-商品集(手动) 10.69%｜SB-车型词 14.02%｜SD-浏览再营销 2.0%｜SD-竞品ASIN定向 6.66%</td></tr><tr><td class="cat">点火系统</td><td class="num">4</td><td class="strats">SD-类目+浏览再营销 6.57%｜SD-类目+SIM 4.94%｜SD-浏览类似商品受众 4.18%｜SD-类目定向 3.72%</td></tr><tr><td class="cat">转向器</td><td class="num">3</td><td class="strats">SD-相似品定向 4.53%｜SB-商品集(手动) 14.15%｜SB-商品集(自动) 13.39%</td></tr><tr><td class="cat">三元催化</td><td class="num">2</td><td class="strats">SD-浏览再营销组合 3.19%｜SD-高销链接再营销 1.77%</td></tr><tr><td class="cat">起发电机</td><td class="num">2</td><td class="strats">SD-浏览再营销 4.21%｜SD-相似品定向 5.9%</td></tr><tr><td class="cat">燃油泵</td><td class="num">2</td><td class="strats">SD-相似品定向 4.85%｜SD-浏览再营销 2.44%</td></tr><tr><td class="cat">控制臂</td><td class="num">2</td><td class="strats">SD-浏览再营销 4.77%｜SD-类目+SIM 6.45%</td></tr><tr><td class="cat">滤清器</td><td class="num">2</td><td class="strats">SD-场内客群受众 4.95%｜SB-旗舰店子页面 6.22%</td></tr><tr><td class="cat">散热器</td><td class="num">2</td><td class="strats">SD-相似品定向 6.0%｜SB-商品集 2.27%</td></tr><tr><td class="cat">品牌旗舰店</td><td class="num">1</td><td class="strats">SB-品牌旗舰店 1.96%</td></tr><tr><td class="cat">卡钳</td><td class="num">1</td><td class="strats">SD-相似品定向 6.18%</td></tr><tr><td class="cat">轮毂轴承</td><td class="num">1</td><td class="strats">SD-高销链接再营销 7.35%</td></tr><tr><td class="cat">减震器</td><td class="num">1</td><td class="strats">SD-相似品定向 4.81%</td></tr><tr><td class="cat">进气套件</td><td class="num">1</td><td class="strats">SD-竞品ASIN定向 5.82%</td></tr></tbody></table></div>
+</div></div>
+<div class="fold"><button class="foldbtn">📋 18个可用/待改善/低效/预警组合明细<span class="arr">▸</span></button><div class="foldbody">
+<div class="tw"><table><thead><tr><th>品类</th><th class="num">策略数</th><th>策略清单（附档位）</th></tr></thead><tbody><tr><td class="cat">滤清器</td><td class="num">6</td><td class="strats">SD-大促节点 8.07%<span class="tg t-ok">可用</span>｜SD-浏览类似商品受众 9.28%<span class="tg t-ok">可用</span>｜SD-类目定向 8.08%<span class="tg t-ok">可用</span>｜SB-关键词(词组/语义) 21.36%<span class="tg t-warn">待改善</span>｜SB-商品集(手动) 35.81%<span class="tg t-warn">预警</span>｜SD-本品再营销(品牌防御) 21.05%<span class="tg t-warn">低效</span></td></tr><tr><td class="cat">点火系统</td><td class="num">1</td><td class="strats">SD-浏览再营销 8.46%<span class="tg t-ok">可用</span></td></tr><tr><td class="cat">空调压缩机</td><td class="num">2</td><td class="strats">SB-关键词(词组/语义) 20.77%<span class="tg t-warn">待改善</span>｜SD-本品再营销(品牌防御) 8.7%<span class="tg t-ok">可用</span></td></tr><tr><td class="cat">怠速电磁阀</td><td class="num">1</td><td class="strats">SD-类目定向 8.16%<span class="tg t-ok">可用</span></td></tr><tr><td class="cat">燃油泵</td><td class="num">1</td><td class="strats">SB-车型词 20.72%<span class="tg t-warn">待改善</span></td></tr><tr><td class="cat">卡钳</td><td class="num">2</td><td class="strats">SD-类目定向 9.29%<span class="tg t-ok">可用</span>｜SB-SBV视频 40.58%<span class="tg t-warn">预警</span></td></tr><tr><td class="cat">轮毂附件</td><td class="num">1</td><td class="strats">SD-类目定向 9.12%<span class="tg t-ok">可用</span></td></tr><tr><td class="cat">刹车盘片</td><td class="num">1</td><td class="strats">SB-大词 23.3%<span class="tg t-warn">待改善</span></td></tr><tr><td class="cat">空调鼓风机</td><td class="num">1</td><td class="strats">SD-类目+SIM 10.1%<span class="tg t-ok">可用</span></td></tr><tr><td class="cat">进气套件</td><td class="num">1</td><td class="strats">SB-旗舰店子页面 35.69%<span class="tg t-warn">预警</span></td></tr><tr><td class="cat">控制臂</td><td class="num">1</td><td class="strats">SB-商品集(手动) 30.66%<span class="tg t-warn">预警</span></td></tr></tbody></table></div>
+</div></div>
+<div class="fold"><button class="foldbtn">📋 关停3个 · 判定口径<span class="arr">▸</span></button><div class="foldbody">
+<div class="tw"><table><thead><tr><th>品类</th><th>策略</th><th class="num">花费($)</th><th class="num">ACOS</th><th class="num">订单</th></tr></thead>
+<tbody><tr><td>轮毂附件</td><td>SB-长尾/精准词</td><td class="num">203.11</td><td class="num">56.68%</td><td class="num">9</td></tr>
+<tr><td>滤清器</td><td>SB-商品集(自动)</td><td class="num">157.90</td><td class="num">51.59%</td><td class="num">24</td></tr>
+<tr><td>三元催化</td><td>SB-关键词(词组/语义)</td><td class="num">91.60</td><td class="num">87.8%</td><td class="num">1</td></tr></tbody></table></div>
+<p class="note">判定口径：SD ≤8%有效/8–15%可用/15–25%低效/&gt;25%或0单无效；SB ≤20%合格/20–30%待改善/30–50%预警/&gt;50%或0单关停；&lt;$50或仅1个月＝测试中。</p>
+</div></div>
+</section>
+
+<section id="s45" class="rv">
+<div class="sechead"><span class="no">03+</span><h2>BS部门 × 销售中台：共性策略</h2><span class="sub">双端交叉验证</span></div>
+<div class="points">
+<div class="point"><div class="t">① 相似品/浏览再营销组合</div>双端共同效率引擎：中台 3.19%/7品类全胜，BS $1,749/5.1% 占SD花费66%——全品类可复制、优先常开</div>
+<div class="point"><div class="t">② 本品ASIN浏览再营销 30D</div>双端一致 2%–5%，防御+收割两用，零门槛常开</div>
+<div class="point"><div class="t">③ 购买再营销（30D）</div>双端 6%–10% 达线，汽配复购属性下的常青盘</div>
+<div class="point"><div class="t">④ 类目定向 + refine 细分</div>认知层最低成本入口；BS 证明叠加「评论&lt;4/价格带」后依然有效</div>
+<div class="point"><div class="t">⑤ SB旗舰店子页面×精准词</div>SB侧唯一双端稳定达线路径：控制臂15.4%/压缩机16.7%/张紧器14.9%——10–17% 可复制</div>
+<div class="point"><div class="t">⑥ 车型年份长尾词结构</div>BS 跑得更深：ACOS 10.4%/CVR 7.2%、TOP词&lt;3%——中台可迁移放量</div>
+</div>
+<ul class="tl" style="margin-top:10px">
+<li><b style="color:var(--bad)">双端验证失败的共性教训：</b><b>SB自动定向</b>（中台 51.6%→关停 / BS auto主题词 65.8%，$180仅3单——双端 50%+，全线禁用自动/主题投放）；<b>SB大词高举高打</b>（中台刹车盘片 23.3% 待改善、仅空压 10.98% 个案合格 / BS 控制臂 40.5% 预警、张紧器 72.8% 关停——大词只保留低出价捡漏，不做主攻）；<b>视频广告一次性梭哈</b>（中台 SBV 40.6%/0单 / BS 的 SDV 触达 9.15% 已接近可用、完播 1,823 次——视频应从 SDV 小额测试起步，而非 SBV 直接上关键词位）</li>
+</ul>
+<h3>4.5.3 部门差异画像</h3>
+<ul class="tl">
+<li><b>BS独有亮点：</b>单品深打（三元催化单活动 $1,321/5.92% 扛半盘）；refine 细分定向（评论&lt;4/价格&gt;120）；SDV 视频已摸到可用线；74.7% 品牌新客占比——拉新盘定位清晰</li>
+<li><b>中台独有优势：</b>相似品定向多品类矩阵化（7品类）；场内客群 IM 受众 4.95% 已验证（BS 未跑出）；品牌旗舰店 SB 1.96% 标杆（BS 未开旗舰店大盘投放）；策略卡完备的准入门槛体系</li>
+<li><b>BS需补课：</b>小花费测试失败品的退出机制——转向器（合计 $37/1单）、高压油泵（合计 $37/0单）实测未跑出。Q4 建议 BS 的 SD 月预算 $440→$800–1,000，优先补控制臂（2.78%）与轮毂轴承（5.16%），并补开中台已验证的 IM 场内客群与品牌旗舰店 SB</li>
+</ul>
+<div class="fold"><button class="foldbtn">📋 六大共性策略 / 共性失败 明细表<span class="arr">▸</span></button><div class="foldbody">
+<div class="tw"><table><thead><tr><th>#</th><th>共性策略</th><th>策略卡位置</th><th>销售中台实测</th><th>BS部门实测</th><th>共性结论</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>SD相似品/浏览再营销组合（相似品30D+类似商品受众）</td><td>SD#11</td><td>三元催化 $6,402/3.19%/2,147单；相似品7品类全胜3.9%–6.2%</td><td>$1,749/5.1%/474单，占SD花费66%</td><td>两部门共同的效率引擎，ACOS稳定3%–6%，全品类可复制、优先常开</td></tr>
+<tr><td>2</td><td>SD本品ASIN浏览再营销30D</td><td>SD#13</td><td>多品类 2%–4.8%（最稳）</td><td>$104/3.72%（全场最低档）</td><td>双端一致 2%–5%，防御+收割两用，零门槛常开项</td></tr>
+<tr><td>3</td><td>SD购买再营销（30D）</td><td>SD#15</td><td>滤清器 9.3% 可用（易耗品优先）</td><td>$516/6.42%/130单（有效）</td><td>双端 6%–10% 达线，汽配复购属性下是常青盘</td></tr>
+<tr><td>4</td><td>SD类目定向/类目浏览再营销（CTX）</td><td>SD#2/#10</td><td>类目定向 3.72%–10% 多品类有效</td><td>$258/5.0%–7.0%（含refine细分6.8%）</td><td>认知层最低成本入口；BS证明叠加「评论&lt;4/价格带」refine后依然有效，是中台真价格细分结论的加强版</td></tr>
+<tr><td>5</td><td>SB旗舰店子页面×品类词/车型年份词</td><td>SB#16/#17</td><td>滤清器子页 6.22%、转向器商品集 13.4–14.2%、空压 10.7%</td><td>控制臂 15.4%、压缩机 16.7%、张紧器 14.9%、半轴 11.8% 全部合格</td><td>SB侧唯一双端稳定达线路径：子页面承接+精准词结构，10%–17% 区间可复制</td></tr>
+<tr><td>6</td><td>「车型年份长尾词」结构打法</td><td>SB#12延伸</td><td>空压车型词 14.0% 合格</td><td>车型+年份词 ACOS 10.4%/CVR 7.2%，TOP词&lt;3%</td><td>BS跑得更深：broad匹配+海量年份车型长尾是SB拉ROI的正确姿势，中台可迁移放量</td></tr>
+</tbody></table></div>
+<div class="tw"><table><thead><tr><th>共性失败</th><th>销售中台</th><th>BS部门</th><th>处置建议</th></tr></thead>
+<tbody>
+<tr><td style="color:var(--bad)">SB自动定向</td><td>SB自动商品集 51.6%→关停</td><td>auto主题词 65.8%（$180仅3单）</td><td>双端 50%+，全线禁用自动/主题投放</td></tr>
+<tr><td style="color:var(--bad)">SB大词高举高打</td><td>刹车盘片大词 23.3% 待改善（仅空压 10.98% 个案合格）</td><td>控制臂大词 40.5% 预警、张紧器大词 72.8% 关停</td><td>大词只保留低出价捡漏（SB图片卡#12先试词），不做主攻</td></tr>
+<tr><td style="color:var(--bad)">视频广告一次性梭哈</td><td>SBV视频 40.6%/0单 预警</td><td>BS的SDV触达 9.15% 已接近可用（完播1,823次）</td><td>视频应从SDV小额测试起步（BS路径），而非SBV直接上关键词位（中台教训）</td></tr>
+</tbody></table></div>
+</div></div>
+</section>
+
+<section id="s5" class="rv">
+<div class="sechead"><span class="no">04</span><h2>市占卡位与投放错配</h2><span class="sub">绿条=市占 · 红条=花费占比</span></div>
+<div class="chart" style="background:#fff;padding:16px">
+<div class="msrow"><span class="hl">Calipers 卡钳 <i class="rk">KAX #1</i></span><div class="hbar"><i class="pg" data-w="94" style="width:0"></i></div><span class="hv">37.4%</span><div class="hbar"><i class=pr data-w=8 style=width:0></i></div><span class="hv">3.2%</span></div><div class="msrow"><span class="hl">Complete Units 转向器 <i class="rk">PHILTOP #4</i></span><div class="hbar"><i class="pg" data-w="19" style="width:0"></i></div><span class="hv">7.74%</span><div class="hbar"><i class=pr data-w=14 style=width:0></i></div><span class="hv">5.5%</span></div><div class="msrow"><span class="hl">Catalytic 三元催化 <i class="rk">PHILTOP #3</i></span><div class="hbar"><i class="pg" data-w="19" style="width:0"></i></div><span class="hv">7.63%</span><div class="hbar"><i class=pr data-w=40 style=width:0></i></div><span class="hv">15.9%</span></div><div class="msrow"><span class="hl">Primary Cyl. 制动总泵 <i class="rk">PHILTOP #10</i></span><div class="hbar"><i class="pg" data-w="18" style="width:0"></i></div><span class="hv">7.25%</span><div class="hbar"></div><span class="hv"><b class=zero>零投放</b></span></div><div class="msrow"><span class="hl">Pumps 转向助力泵 <i class="rk">PHILTOP #4</i></span><div class="hbar"><i class="pg" data-w="16" style="width:0"></i></div><span class="hv">6.59%</span><div class="hbar"></div><span class="hv"><b class=zero>零投放</b></span></div><div class="msrow"><span class="hl">Radiators 散热器 <i class="rk">PHILTOP #8</i></span><div class="hbar"><i class="pg" data-w="13" style="width:0"></i></div><span class="hv">5.2%</span><div class="hbar"><i class=pr data-w=6 style=width:0></i></div><span class="hv">2.5%</span></div><div class="msrow"><span class="hl">Hub Asm. 轮毂轴承 <i class="rk">PHILTOP #9</i></span><div class="hbar"><i class="pg" data-w="10" style="width:0"></i></div><span class="hv">3.84%</span><div class="hbar"><i class=pr data-w=3 style=width:0></i></div><span class="hv">1.2%</span></div><div class="msrow"><span class="hl">Head Gasket 维修包 <i class="rk">KAX #8</i></span><div class="hbar"><i class="pg" data-w="9" style="width:0"></i></div><span class="hv">3.78%</span><div class="hbar"></div><span class="hv"><b class=zero>零投放</b></span></div><div class="msrow"><span class="hl">Half-Shaft 半轴 <i class="rk">PHILTOP #7</i></span><div class="hbar"><i class="pg" data-w="9" style="width:0"></i></div><span class="hv">3.77%</span><div class="hbar"></div><span class="hv"><b class=zero>零投放</b></span></div><div class="msrow"><span class="hl">Fuel Pumps 燃油泵 <i class="rk">PHILTOP #5</i></span><div class="hbar"><i class="pg" data-w="8" style="width:0"></i></div><span class="hv">3.11%</span><div class="hbar"><i class=pr data-w=12 style=width:0></i></div><span class="hv">4.7%</span></div>
+<div class="leg"><span><i style="background:var(--good)"></i>公司市占（近12月）</span><span><i style="background:var(--bad)"></i>H1广告花费占比</span><span style="margin-left:auto">口径：AM品类矩阵 2025.10–2026.09</span></div></div>
+<ul class="tl">
+<li><b>领先者欠投：</b>卡钳 37.4%（KAX#1）花费占比仅 3.2%——防御明显不足</li>
+<li><b>有市占零投放：</b>制动总泵 7.25%/转向助力泵 6.59%/半轴 3.77%/维修包 3.78%——最确定的进攻缺口</li>
+<li><b>高投入低卡位：</b>滤清器 25.2% 花费 vs 2.86% 市占（大盘$24.7亿极度分散），Q4 压缩至 16% 让位卡位</li>
+</ul>
+<div class="fold"><button class="foldbtn">📋 市占×花费 明细表<span class="arr">▸</span></button><div class="foldbody">
+<div class="tw"><table><thead><tr><th>节点</th><th>最佳品牌</th><th class="num">市占</th><th class="num">花费占比</th></tr></thead>
+<tbody><tr><td class="cat">Calipers 卡钳</td><td>KAX #1</td><td class="num">37.4%</td><td class="num">3.2%</td></tr><tr><td class="cat">Complete Units 转向器</td><td>PHILTOP #4</td><td class="num">7.74%</td><td class="num">5.5%</td></tr><tr><td class="cat">Catalytic 三元催化</td><td>PHILTOP #3</td><td class="num">7.63%</td><td class="num">15.9%</td></tr><tr><td class="cat">Primary Cyl. 制动总泵</td><td>PHILTOP #10</td><td class="num">7.25%</td><td class="num">未投</td></tr><tr><td class="cat">Pumps 转向助力泵</td><td>PHILTOP #4</td><td class="num">6.59%</td><td class="num">未投</td></tr><tr><td class="cat">Radiators 散热器</td><td>PHILTOP #8</td><td class="num">5.2%</td><td class="num">2.5%</td></tr><tr><td class="cat">Hub Asm. 轮毂轴承</td><td>PHILTOP #9</td><td class="num">3.84%</td><td class="num">1.2%</td></tr><tr><td class="cat">Head Gasket 维修包</td><td>KAX #8</td><td class="num">3.78%</td><td class="num">未投</td></tr><tr><td class="cat">Half-Shaft 半轴</td><td>PHILTOP #7</td><td class="num">3.77%</td><td class="num">未投</td></tr><tr><td class="cat">Fuel Pumps 燃油泵</td><td>PHILTOP #5</td><td class="num">3.11%</td><td class="num">4.7%</td></tr></tbody></table></div>
+</div></div>
+</section>
+
+<section id="s6" class="rv">
+<div class="sechead"><span class="no">04+</span><h2>SBSD策略全景</h2><span class="sub">SD 14类 · SB 8类</span></div>
+<ul class="tl">
+<li><b>SD侧 14 类定向打法：</b>受众类 5 种（浏览/购买/本品/高销/场内客群+类似商品受众）、上下文与竞品 5 种、组合与节点 3 种——定向类型层无失败策略（ACOS 4.35%–5.65% 全达线），优化在参数（30天回溯为主/7天窗口最优/分类细分偏弱）</li>
+<li><b>SB侧 8 类：</b>旗舰店 2 种/商品集/关键词 4 种/SBV——除旗舰店与高客单商品集外合格率低；关键词结构按「广泛探量→短语验证→精准收割」三段式重构（精准匹配 1.66% 是短语 14.23% 的 8.6 倍但仅占 7% 花费）</li>
+</ul>
+<a class="btn" href="https://alidocs.dingtalk.com/i/nodes/XPwkYGxZV3RweqdkTrZ370MMWAgozOKL" target="_blank">打开钉钉在线表格：策略全景与策略地图（24打法／70组合矩阵，含判定配色）→</a>
+</section>
+
+<section id="s7" class="rv">
+<div class="sechead"><span class="no">05</span><h2>Q4执行方案</h2><span class="sub">金额均为预估 · 明细默认折叠</span></div>
+<div class="budtotal"><span>月度总盘构成</span><b>$14,300 / 月 ｜ $42,900 / 季 ｜ 较Q3月预算 +78.8%</b></div>
+<div class="dist" style="border-radius:10px"><div class="bsegs" style="flex:7500;background:#1F3864" title="存量盘 $7,500"><span>存量盘<br>$7,500</span></div><div class="bsegs" style="flex:1800;background:#2E75B6" title="增量(品线+SBV) $1,800"><span>增量(品线+SBV)<br>$1,800</span></div><div class="bsegs" style="flex:3000;background:#7EA6D9" title="全流域试点 $3,000"><span>全流域试点<br>$3,000</span></div><div class="bsegs" style="flex:2000;background:#B9CFEA" title="预备池与测试专项 $2,000"><span>预备池与测试专项<br>$2,000</span></div></div>
+<ul class="tl">
+<li><b>存量 7,500：</b>9月实际 $7,593 取整、不放大基础盘；层级 品牌扩张:竞品扩张:品牌防御＝<b>6:3:1</b>；卡钳占比提至 10% 补防御；滤清器压至 16%</li>
+<li><b>增量 1,800：</b>新增品线 800（张紧器/水泵/轮毂附件+车灯总成）＋SBV 1,000（仅滤清+车灯，4周 ACOS≤30% 闸门）</li>
+<li><b>全流域试点 3,000：</b>$100/天，11月启动一季度；AI 编排 SP+展示+视频+电视；LTS+NTB 评估（官方：长期回报+67%/新客成本-29%）</li>
+<li><b>专项 2,000：</b>P1冷启动 800＋场内客群复制 750（点火/三元催化/卡钳）＋价格细分 250＋AMC 200——统一4周转正/停投闸门，资金可互相调剂</li>
+<li><b>Q4目标：</b>SBSD盘整体 ACOS≤8%、广告销售额≥$37万/季（ROAS≥13）、执行率±3%；增量按4周评估，达标转正、不达标回补；全流域试点以 LTS+NTB 评估，不适用单月 ACOS 考核</li>
+</ul>
+<h3>SBV广告Q3策略论证痛难点</h3>
+<ul class="tl">
+<li><b>视频素材结论：</b>目前使用企划部基于主图视频二次剪辑的素材，视频主题较为单一；相较竞品专业的 SBV 视频素材，我方素材在广告营销层面的专业度仍有欠缺；广告角度方面，SBV 广告测试周期较短、投放量级较小，暂无法得出确定性结论</li>
+<li><b>图片素材测试结论：</b>从现有 SD 测试数据来看，使用精选广告素材与链接主图展示的 SD 广告，长期效果差异不大，初步结论为图片素材对该类广告影响较小；但当前数据体量较小，仍需持续测试验证 · <a href="https://alidocs.dingtalk.com/i/nodes/kDnRL6jAJM3zqQkvcXgjqP7OWyMoPYe1" target="_blank">站内广告素材（钉钉文档）</a></li>
+</ul>
+<h3>全流域广告试点（Full-Funnel Campaigns，11月启动）</h3>
+<p>亚马逊2026年9–10月广告新框架下的全流域广告活动：单一广告活动打通「认知→考虑→购买」全链路，AI自动编排 SP+展示+视频+流媒体电视组合，广告主只需提供商品、预算、创意素材并设定目标（资料来源：《亚马逊广告新框架梳理_2026Q4》）。</p>
+<p><b>为什么试：</b>SBSD半年数据证明我们的效率全部来自漏斗中下层（搜索意图+再营销受众），上层认知流量完全空白；全流域以最低操作成本补上这一层，并以 LTS/NTB 口径衡量长期价值——是现有盘面的增量试验，不与 SBSD 预算互相挤占。</p>
+<h3>预备池与策略测试专项（$2,000/月，合并管理）</h3>
+<p class="note">预备池的一部分用于增投H1未覆盖品类（P1四品类冷启动），一部分用于策略尝试（场内客群复制/价格细分/AMC受众）——P1冷启动直接复用已验证打法，本身就是策略在新品类上的交叉验证；策略测试转正后又扩大预备池品类的可用打法库。两部分交叉验证、统一纪律、合并管理，资金可按4周评估结果互相调剂（不达标回补的预算优先流向达标项）。具体品类以实际需求和具体情况调整。</p>
+<div class="fold"><button class="foldbtn">📋 预算总盘 / 增量构成 明细表<span class="arr">▸</span></button><div class="foldbody">
+<div class="tw"><table><thead><tr><th>模块</th><th class="num">月度($)</th><th>定档依据</th></tr></thead>
+<tbody>
+<tr><td>存量盘（SB+SD）</td><td class="num">7,500</td><td>9月实际 7,593 取整，不放大基础盘</td></tr>
+<tr><td>增量（SB+SD）</td><td class="num">+1,800</td><td>新增品线800＋SBV专项1,000</td></tr>
+<tr><td>全流域广告试点</td><td class="num">+3,000</td><td>$100/天，11月启动，测试一个季度</td></tr>
+<tr><td>预备池与策略测试专项</td><td class="num">+2,000</td><td>品类冷启动＋策略验证，交叉验证合并管理</td></tr>
+<tr class="sum"><td>月度总盘</td><td class="num">14,300</td><td>季度 42,900；较Q3月预算 +6,300（+78.8%）</td></tr>
+</tbody></table></div>
+<div class="tw"><table><thead><tr><th>增量/专项投向</th><th class="num">月度($)</th><th>用途与评估纪律</th></tr></thead>
+<tbody>
+<tr><td>① 新增品线</td><td class="num">800</td><td>张紧器/水泵/轮毂附件（品牌试点）+车灯总成（旺季）</td></tr>
+<tr><td>② SBV视频测试</td><td class="num">1,000</td><td>仅滤清+车灯；4周 ACOS≤30% 转正，不达标回补SD</td></tr>
+<tr><td>P1品类冷启动</td><td class="num">800</td><td>四品类有市占零投放；相似品+浏览再营销双开；4周 ACOS≤8% 且 ROAS≥10</td></tr>
+<tr><td>场内客群复制</td><td class="num">750</td><td>滤清已验证 $912/4.98%，复制点火/三元催化/卡钳；空压淡季暂缓</td></tr>
+<tr><td>真价格细分</td><td class="num">250</td><td>三元 $196@0.8–1.0% 放大3倍；4周 ACOS≤8%</td></tr>
+<tr><td>AMC自定义受众</td><td class="num">200</td><td>「滤清VC加购未购买」已建0花费；4周出ACOS结论</td></tr>
+</tbody></table></div>
+<p class="note">SB精准收割（exact转词）与购买再营销放大两项不设专项，在存量盘内结构调整完成；待改善SB词盘（21%–23%）靠转精准优化、预警档三组合降本观察——均不占用本专项预算。</p>
+</div></div>
+<div class="fold"><button class="foldbtn">📋 全流域试点要素 / 存量分配TOP10<span class="arr">▸</span></button><div class="foldbody">
+<div class="tw"><table><thead><tr><th>要素</th><th>设定</th></tr></thead>
+<tbody>
+<tr><td>试点形式</td><td>1个全流域广告活动；AI自动组合媒体与受众定向，可用详情页素材 AI 生成展示图/电视视频（人工审核后投放）</td></tr>
+<tr><td>试点预算</td><td>最低 $100/天，月度 $3,000</td></tr>
+<tr><td>启动与周期</td><td>2026年11月启动，测试周期一个季度</td></tr>
+<tr><td>衡量指标</td><td>长期销售额 LTS（含未来12个月模型估算，需校验）＋品牌新客 NTB，与自有 ACOS/TACoS 账本对照，不以单月 ACOS 考核</td></tr>
+</tbody></table></div>
+<div class="tw"><table><thead><tr><th>存量分配TOP10</th><th class="num">月度($)</th><th class="num">占比</th><th>依据</th></tr></thead>
+<tbody>
+<tr><td>滤清器</td><td class="num">1,200</td><td class="num">16%</td><td>引流引擎，压缩让位卡位</td></tr>
+<tr><td>三元催化</td><td class="num">900</td><td class="num">12%</td><td>市占7.63%(#3)；ACOS 2.91%最优</td></tr>
+<tr><td>卡钳</td><td class="num">750</td><td class="num">10%</td><td>KAX#1(37.4%)；补防御欠投</td></tr>
+<tr><td>点火系统</td><td class="num">675</td><td class="num">9%</td><td>多策略有效（5.26%）</td></tr>
+<tr><td>转向器</td><td class="num">600</td><td class="num">8%</td><td>市占7.74%(#4)；守4冲8</td></tr>
+<tr><td>减震器</td><td class="num">525</td><td class="num">7%</td><td>大盘$4.34亿；ACOS 4.47%</td></tr>
+<tr><td>品牌旗舰店</td><td class="num">450</td><td class="num">6%</td><td>ACOS 1.96%最高效</td></tr>
+<tr><td>控制臂</td><td class="num">450</td><td class="num">6%</td><td>竞品定向挑战者</td></tr>
+<tr><td>起发电机</td><td class="num">450</td><td class="num">6%</td><td>节点#6；ACOS 4.68%</td></tr>
+<tr><td>其余五品类</td><td class="num">≈2,250</td><td class="num">30%</td><td>按市占+效率分配</td></tr>
+</tbody></table></div>
+</div></div>
+</section>
+
+<section id="s8" class="rv">
+<div class="sechead"><span class="no">06</span><h2>预算申请论证</h2><span class="sub">三条核心论据</span></div>
+<div class="points">
+<div class="point"><div class="t">要点一：有效组合浓度</div>半年 $47.9K 花费中 <b>65% 投在已验证有效/合格的组合上，且整体 ACOS 5.15%</b>——加预算是在已被数据验证的打法上加码，而非探索性投放</div>
+<div class="point"><div class="t">要点二：市占错配的确定性</div>卡钳 37.4% 市占仅 3.2% 花费（防御欠投）、P1四品类有市占零投放（进攻空白）——预算去向对应明确的卡位缺口，非盲目扩盘</div>
+<div class="point"><div class="t">要点三：增量证据链完整</div>张紧器/水泵首月实测近转正线、SBV有明确闸门（4周 ACOS≤30% 不达标回补）、优化测试三项均有正向苗头且设转正/停投闸门、全流域有官方效果数据与独立评估口径（LTS+NTB）——<b>每一美元增量都有对应的验证或止损机制</b></div>
+</div>
+<div class="fold"><button class="foldbtn">📋 五模块论证依据明细表<span class="arr">▸</span></button><div class="foldbody">
+<div class="tw"><table><thead><tr><th>预算模块</th><th class="num">月度($)</th><th>论证依据（已验证的品类×策略表现）</th></tr></thead>
+<tbody>
+<tr><td class="cat">存量盘</td><td class="num">7,500</td><td>H1已验证有效/合格 31 个组合、占 65% 花费（SD≤8%/SB≤20%）：三元催化×浏览再营销组合 $6,402/3.19%/2,147单；相似品定向 7 品类全胜（3.86%–6.18%，无一失败）；品牌旗舰店 1.96%/$1.9K/943单；点火系统多策略 5.26%；起发电机/燃油泵/散热器 4.63%–4.95%；高销链接三元催化 1.77%——预算用于已验证组合放量与领先节点防御（卡钳存量占比提至10%）</td></tr>
+<tr><td class="cat">增量①新增品线</td><td class="num">800</td><td>张紧器×浏览再营销 9.07%、×类目+SIM 8.40%，水泵×类目+SIM 5.84%——9月首月即逼近 8% 转正线，验证路径清晰；车灯总成 Q4 旺季＋SB活动已建待启动，承接旺季流量扶持；轮毂附件待补充策略尝试</td></tr>
+<tr><td class="cat">增量②SBV专项</td><td class="num">1,000</td><td>历史三测未达线（40.58% 预警/两品类0单），但 SB 广泛/短语承担品牌新客 69%–81%，视频是补认知的必要形式；以新素材+4周 ACOS≤30% 门槛重测、仅投滤清器+车灯两个高流量品类，风险有闸门</td></tr>
+<tr><td class="cat">预备池与策略测试专项</td><td class="num">2,000</td><td>品类侧：P1四品类有真实市占零投放（转向助力泵 6.59%#4/制动总泵 7.25%#10/半轴 3.77%#7/发动机维修包 3.78%#8），用全店验证成功率最高的打法冷启动；策略侧：场内客群滤清器单点已验证 $912/4.98% 复制3品类、真价格细分 $196/0.8%–1.0% 待放大、AMC人群包零成本已建——两部分交叉验证（冷启动即打法的跨品类验证），统一4周转正/停投闸门，验证失败即回补存量</td></tr>
+<tr><td class="cat">全流域试点</td><td class="num">3,000</td><td>SBSD效率全部集中在漏斗中下层（搜索意图+再营销），上层认知流量空白；官方测试长期广告回报 +67%/新客成本 -29%；旺季造势（车灯）与品牌试点（张紧器/水泵）为最佳切入场景；$100/天为最低试点门槛</td></tr>
+</tbody></table></div>
+</div></div>
+</section>
+
+<section id="s9" class="rv">
+<div class="sechead"><span class="no">A</span><h2>附录</h2><span class="sub">口径与附件</span></div>
+<ul class="tl">
+<li><b>判定口径：</b>SD ≤8%/8–15%/15–25%/&gt;25%或0单；SB ≤20%/20–30%/30–50%/&gt;50%或0单；&lt;$50或仅1个月＝测试中</li>
+<li><b>数据源：</b>US8导出（92活动/283条月度）；CA4投放词表×关键词表校验；市占：AM品类矩阵 2025.10–2026.09</li>
+<li><b>附件：</b><a href="https://alidocs.dingtalk.com/i/nodes/lyQod3RxJK3plYjKcY57jRZAJkb4Mw9r?utm_scene=person_space&amp;dontjump=true" target="_blank">SBSD投放与策略综合报告（钉钉终稿）</a> · <a href="https://alidocs.dingtalk.com/i/nodes/XPwkYGxZV3RweqdkTrZ370MMWAgozOKL" target="_blank">SBSD广告策略卡（含策略全景/策略地图sheet）</a> · <a href="https://alidocs.dingtalk.com/i/nodes/QG53mjyd80R5o6dMTz6eN7ARV6zbX04v" target="_blank">BS部门SDSB半年表现与共性策略分析</a> · <a href="https://alidocs.dingtalk.com/i/nodes/kDnRL6jAJM3zqQkvcXgjqP7OWyMoPYe1" target="_blank">站内广告素材</a></li>
+</ul>
+</section>
+
+<footer>SBSD投放与策略综合报告 · 交互版 v2（蓝白灰/图表优先/明细折叠）｜数据截至 2026-09｜单文件离线页面 ｜ 源工作区：SBSD的策略分析</footer>
+</main>
+<script>
+(function(){
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target);}});},{threshold:.1});
+document.querySelectorAll('.rv').forEach(function(el){io.observe(el);});
+var secs=[].slice.call(document.querySelectorAll('section[id]'));
+var links=[].slice.call(document.querySelectorAll('#bar nav a'));
+var si=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){
+var id=e.target.id;
+links.forEach(function(a){a.classList.toggle('act',a.getAttribute('href')==='#'+id);});
+}});},{rootMargin:'-30% 0px -60% 0px'});
+secs.forEach(function(s){si.observe(s);});
+addEventListener('scroll',function(){var h=document.documentElement;
+var p=h.scrollTop/(h.scrollHeight-h.clientHeight);
+document.getElementById('prog').style.width=(p*100).toFixed(1)+'%';
+document.getElementById('pct').textContent=Math.round(p*100)+'%';},{passive:true});
+var cio=new IntersectionObserver(function(es){es.forEach(function(e){
+if(!e.isIntersecting)return;cio.unobserve(e.target);
+var el=e.target,t=+el.getAttribute('data-t'),st=null;
+function step(ts){if(!st)st=ts;var k=Math.min((ts-st)/1200,1);k=1-Math.pow(1-k,3);
+el.textContent=Math.round(t*k).toLocaleString('en-US');if(k<1)requestAnimationFrame(step);}
+requestAnimationFrame(step);});},{threshold:.5});
+document.querySelectorAll('.cu').forEach(function(el){cio.observe(el);});
+function grow(root){root.querySelectorAll('i[data-w]').forEach(function(i){i.style.width=i.getAttribute('data-w')+'%';});}
+var bio=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){grow(e.target);}});},{threshold:.25});
+document.querySelectorAll('.chart').forEach(function(el){bio.observe(el);});
+document.querySelectorAll('.foldbtn').forEach(function(b){
+b.addEventListener('click',function(){var f=b.parentElement;f.classList.toggle('open');
+if(f.classList.contains('open'))setTimeout(function(){grow(f);},60);});});
+})();
+</script>
+</body>
+</html>
