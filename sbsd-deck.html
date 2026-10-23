@@ -31,7 +31,9 @@ pointer-events:auto!important;width:1920px;height:1080px;break-after:page;page-b
 /* ===== 幻灯片版式 ===== */
 body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;color:var(--ink);
 font-variant-numeric:tabular-nums;font-size:26px;line-height:1.55}
-.slide{padding:64px 88px}
+.slide{padding:64px 88px;display:flex;flex-direction:column}
+.shead{flex-shrink:0}
+.slide>*:not(.shead){margin-top:auto;margin-bottom:auto}
 .shead{display:flex;align-items:baseline;gap:18px;border-bottom:3px solid var(--tint);padding-bottom:14px;margin-bottom:26px}
 .shead .no{color:var(--blue);font-size:26px;font-weight:700}
 .shead h2{font-size:52px;color:var(--navy);font-weight:700;letter-spacing:1px}
