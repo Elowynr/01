@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>数据汇报相关 HTML Skill 盘点 · 交互版</title>
+<style>
+:root{
+  --bg:#F5F7FA;--panel:#FFF;--line:#E2E8F0;--line2:#CBD5E1;--ink:#1F2937;--dim:#64748B;
+  --navy:#1F3864;--blue:#2E75B6;--tint:#EAF1F9;--good:#15803D;--goodbg:#DCFCE7;
+  --ok:#1D4ED8;--okbg:#DBEAFE;--warn:#B45309;--warnbg:#FEF3C7;--bad:#B91C1C;--badbg:#FEE2E2;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;font-size:14px;line-height:1.7;font-variant-numeric:tabular-nums}
+a{color:var(--blue);text-decoration:none} a:hover{text-decoration:underline}
+#bar{position:fixed;top:0;left:0;right:0;z-index:50;background:rgba(255,255,255,.97);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:14px;padding:0 18px;height:46px}
+#bar .logo{color:var(--navy);font-weight:700;white-space:nowrap}
+#bar nav{display:flex;gap:2px;overflow-x:auto;flex:1}
+#bar nav a{color:var(--dim);padding:4px 10px;white-space:nowrap;font-size:12.5px;border-radius:4px}
+#bar nav a:hover,#bar nav a.act{color:var(--navy);background:var(--tint);text-decoration:none}
+#prog{position:fixed;top:46px;left:0;height:3px;background:var(--blue);width:0;z-index:50}
+main{max-width:1120px;margin:0 auto;padding:74px 22px 70px}
+section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px 24px;margin:16px 0;box-shadow:0 1px 3px rgba(31,56,100,.05);scroll-margin-top:64px}
+.sechead{display:flex;align-items:baseline;gap:12px;border-bottom:2px solid var(--tint);padding-bottom:8px;margin-bottom:16px}
+.sechead .no{color:var(--blue);font-size:12px;font-weight:700}
+.sechead h2{margin:0;font-size:19px;color:var(--navy)}
+.sechead .sub{color:var(--dim);font-size:11.5px;margin-left:auto}
+h3{font-size:14.5px;color:var(--navy);margin:20px 0 8px}
+p{margin:8px 0} .note{color:var(--dim);font-size:12px}
+b{color:var(--navy)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0 6px}
+.kpi{background:var(--tint);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.kpi .n{font-size:26px;font-weight:700;color:var(--navy);line-height:1.2}
+.kpi .n small{font-size:13px;color:var(--blue);font-weight:700}
+.kpi .l{color:var(--dim);font-size:12px;margin-top:2px}
+blockquote{margin:12px 0;padding:10px 14px;border-left:3px solid var(--blue);background:var(--tint);border-radius:0 8px 8px 0;color:var(--navy);font-weight:600}
+.layer-card{border:1px solid var(--line);border-radius:10px;margin:8px 0;overflow:hidden;transition:box-shadow .2s}
+.layer-card:hover{box-shadow:0 2px 8px rgba(31,56,100,.10)}
+.lc-head{display:flex;align-items:center;gap:12px;width:100%;background:#fff;border:0;padding:12px 14px;cursor:pointer;font:inherit;text-align:left;border-bottom:1px solid var(--tint)}
+.lc-no{flex:0 0 auto;background:var(--navy);color:#fff;font-size:12px;font-weight:700;border-radius:6px;padding:2px 8px}
+.lc-name{font-weight:700;color:var(--navy);white-space:nowrap}
+.lc-duty{color:var(--dim);font-size:12.5px}
+.lc-count{margin-left:auto;color:var(--blue);font-size:12px;font-weight:700}
+.lc-arr{color:var(--dim);transition:transform .25s}
+.layer-card.open .lc-arr{transform:rotate(180deg)}
+.lc-body{max-height:0;overflow:hidden;transition:max-height .28s ease;padding:0 14px;display:flex;flex-wrap:wrap;gap:6px;background:#FBFDFE}
+.layer-card.open .lc-body{max-height:260px;padding:12px 14px}
+.sk{background:#fff;border:1px solid var(--line2);border-radius:999px;padding:3px 11px;font-size:12.5px;color:var(--ink);white-space:nowrap}
+.hrow{display:grid;grid-template-columns:150px 1fr 56px;align-items:center;gap:10px;margin:7px 0}
+.hl{font-size:12.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hbar{background:#EEF2F7;border-radius:6px;height:14px;overflow:hidden}
+.hbar i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),#5B8FD0);border-radius:6px;width:0;transition:width .9s ease}
+.hv{font-size:12px;color:var(--dim);text-align:right}
+.combos{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin-top:12px}
+.combo{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:#FBFDFE;transition:.2s;cursor:pointer}
+.combo:hover,.combo.hl{border-color:var(--blue);background:var(--tint)}
+.cb-scene{font-weight:700;color:var(--navy);margin-bottom:4px}
+.cb-flow{color:var(--ink);font-size:13px;font-family:"Consolas","Microsoft YaHei",monospace}
+.tl{list-style:none;padding:0;margin:8px 0}
+.num{margin:6px 0;color:var(--ink)}
+.caps{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;margin-top:10px}
+.cap{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:#fff}
+.cap-t{font-weight:700;color:var(--navy);margin-bottom:4px;font-size:13.5px}
+.cap-d{color:var(--dim);font-size:12.5px;line-height:1.6}
+.shots{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}
+.shot{margin:0}
+.ph{border:1px dashed var(--line2);border-radius:10px;background:#F8FAFC;color:var(--dim);font-size:12.5px;padding:34px 12px;text-align:center}
+.links{display:flex;flex-direction:column;gap:6px;margin:8px 0}
+.links a{border:1px solid var(--line);border-radius:8px;padding:9px 12px;background:#FBFDFE;color:var(--blue)}
+.links a:hover{background:var(--tint);text-decoration:none}
+.tw{overflow:auto;margin:10px 0}
+.tw table{width:100%;border-collapse:collapse;font-size:13px}
+.tw th{background:var(--navy);color:#fff;font-weight:600;text-align:left;padding:9px 12px;white-space:nowrap}
+.tw td{border-bottom:1px solid var(--line);padding:9px 12px;vertical-align:top;line-height:1.65}
+.tw tr:nth-child(even) td{background:#FBFDFE}
+.foot{color:var(--dim);font-size:12px;text-align:center;margin-top:24px;line-height:1.9}
+@media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}.hrow{grid-template-columns:110px 1fr 50px}.shots{grid-template-columns:1fr}}
+@media print{#bar,#prog{display:none}main{padding:10px}section{break-inside:avoid;box-shadow:none}}
+</style>
+</head>
+<body>
+<div id="bar"><span class="logo">数据汇报相关 HTML Skill 盘点</span><nav><a href="#s1">背景</a><a href="#s2">六层分工</a><a href="#s3">最小组合</a><a href="#s4">使用感受</a><a href="#s5">工程Skill</a><a href="#s6">总结</a></nav></div>
+<div id="prog"></div>
+<main>
+
+<section id="s1">
+  <div class="sechead"><span class="no">00</span><h2>背景</h2><span class="sub">2026-10 ｜ 18 个技能 ｜ 6 层分工 ｜ 1 个工程化调度 Skill</span></div>
+  <div class="kpis">
+    <div class="kpi"><div class="n">18</div><div class="l">HTML / 可视化 / 汇报技能</div></div>
+    <div class="kpi"><div class="n">6 <small>层</small></div><div class="l">按职责而非强弱分工</div></div>
+    <div class="kpi"><div class="n">5</div><div class="l">常用最小组合场景</div></div>
+    <div class="kpi"><div class="n">1 <small>个</small></div><div class="l">工程化调度 Skill</div></div>
+  </div>
+  <p>上周在做 SBSD 投放与策略综合报告时，主要遇到痛点：</p><p>痛点：传统报告形式难以承载多内容、突出重点
+综合类报告的数据量和内容量都很大，若采用传统报告形式，篇幅会非常长，读者难以快速抓住重点。因此急需一种能够承载多内容、同时帮助读者迅速定位核心信息的载体，而 HTML 在这方面是一个比较合适的选择。</p><p>整理了GitHub能用的 HTML、数据可视化和汇报相关 Skill，一共筛出 18 个，先纠正一下：它们不全是"HTML Skill"。有些负责分析结构，有些负责画图，有些负责页面设计，还有一些只解决流程图、PPT 或图标素材。</p><p>按照6 层重新分了工：</p>
+</section>
+
+<section id="s2">
+  <div class="sechead"><span class="no">01</span><h2>六层分工</h2><span class="sub">点击层卡片展开技能 · 右侧为各层技能数</span></div>
+  
+    <div class="layer-card" data-layer="1">
+      <button class="lc-head" type="button" aria-expanded="true">
+        <span class="lc-no">L1</span>
+        <span class="lc-name">1 分析结构</span>
+        <span class="lc-duty">报告/看板的骨架</span>
+        <span class="lc-count">3</span>
+        <span class="lc-arr">▾</span>
+      </button>
+      <div class="lc-body"><span class="sk">build-report</span><span class="sk">build-dashboard</span><span class="sk">visualize-data</span></div>
+    </div>
+    <div class="layer-card" data-layer="2">
+      <button class="lc-head" type="button" aria-expanded="false">
+        <span class="lc-no">L2</span>
+        <span class="lc-name">2 图表落地</span>
+        <span class="lc-duty">数据→图表</span>
+        <span class="lc-count">3</span>
+        <span class="lc-arr">▾</span>
+      </button>
+      <div class="lc-body"><span class="sk">antv-g2-chart</span><span class="sk">gpt-vis</span><span class="sk">chart-visualization</span></div>
+    </div>
+    <div class="layer-card" data-layer="3">
+      <button class="lc-head" type="button" aria-expanded="false">
+        <span class="lc-no">L3</span>
+        <span class="lc-name">3 页面设计</span>
+        <span class="lc-duty">视觉品质</span>
+        <span class="lc-count">4</span>
+        <span class="lc-arr">▾</span>
+      </button>
+      <div class="lc-body"><span class="sk">frontend-design</span><span class="sk">design-taste</span><span class="sk">image-to-code</span><span class="sk">huashu-design</span></div>
+    </div>
+    <div class="layer-card" data-layer="4">
+      <button class="lc-head" type="button" aria-expanded="false">
+        <span class="lc-no">L4</span>
+        <span class="lc-name">4 特殊结构</span>
+        <span class="lc-duty">关系图/叙事/信息图</span>
+        <span class="lc-count">4</span>
+        <span class="lc-arr">▾</span>
+      </button>
+      <div class="lc-body"><span class="sk">antv-g6-graph (G6)</span><span class="sk">antv-x6-editor (X6)</span><span class="sk">antv-t8-ntv</span><span class="sk">antv-infographic</span></div>
+    </div>
+    <div class="layer-card" data-layer="5">
+      <button class="lc-head" type="button" aria-expanded="false">
+        <span class="lc-no">L5</span>
+        <span class="lc-name">5 汇报形式</span>
+        <span class="lc-duty">HTML/演示载体</span>
+        <span class="lc-count">3</span>
+        <span class="lc-arr">▾</span>
+      </button>
+      <div class="lc-body"><span class="sk">html-ppt</span><span class="sk">frontend-slides</span><span class="sk">guizang-ppt</span></div>
+    </div>
+    <div class="layer-card" data-layer="6">
+      <button class="lc-head" type="button" aria-expanded="false">
+        <span class="lc-no">L6</span>
+        <span class="lc-name">6 素材支持</span>
+        <span class="lc-duty">图标检索</span>
+        <span class="lc-count">1</span>
+        <span class="lc-arr">▾</span>
+      </button>
+      <div class="lc-body"><span class="sk">icon-retrieval</span></div>
+    </div>
+  <h3>各层技能数量</h3>
+  <div class="hrow"><span class="hl">L1 1 分析结构</span>
+      <div class="hbar"><i style="width:16.7%"></i></div><span class="hv">3 个</span></div><div class="hrow"><span class="hl">L2 2 图表落地</span>
+      <div class="hbar"><i style="width:16.7%"></i></div><span class="hv">3 个</span></div><div class="hrow"><span class="hl">L3 3 页面设计</span>
+      <div class="hbar"><i style="width:22.2%"></i></div><span class="hv">4 个</span></div><div class="hrow"><span class="hl">L4 4 特殊结构</span>
+      <div class="hbar"><i style="width:22.2%"></i></div><span class="hv">4 个</span></div><div class="hrow"><span class="hl">L5 5 汇报形式</span>
+      <div class="hbar"><i style="width:16.7%"></i></div><span class="hv">3 个</span></div><div class="hrow"><span class="hl">L6 6 素材支持</span>
+      <div class="hbar"><i style="width:5.6%"></i></div><span class="hv">1 个</span></div>
+</section>
+
+<section id="s3">
+  <div class="sechead"><span class="no">02</span><h2>常用最小组合</h2><span class="sub">不必 18 个全塞进去</span></div>
+  <p>如果只是做一份经营分析报告，不需要18 个全塞进去。更常用的最小组合是：</p>
+  <div class="combos"><div class="combo" data-combo="build-report + visualize-data + frontend-design">
+      <div class="cb-scene">分析报告</div>
+      <div class="cb-flow">build-report + visualize-data + frontend-design</div>
+    </div><div class="combo" data-combo="build-dashboard + G2 + frontend-design">
+      <div class="cb-scene">交互看板</div>
+      <div class="cb-flow">build-dashboard + G2 + frontend-design</div>
+    </div><div class="combo" data-combo="build-report + html-ppt / frontend-slides">
+      <div class="cb-scene">网页 PPT</div>
+      <div class="cb-flow">build-report + html-ppt / frontend-slides</div>
+    </div><div class="combo" data-combo="G6 / X6 + frontend-design">
+      <div class="cb-scene">关系图或数据血缘</div>
+      <div class="cb-flow">G6 / X6 + frontend-design</div>
+    </div><div class="combo" data-combo="infographic + frontend-design">
+      <div class="cb-scene">一页信息图</div>
+      <div class="cb-flow">infographic + frontend-design</div>
+    </div></div>
+</section>
+
+<section id="s4">
+  <div class="sechead"><span class="no">03</span><h2>使用感受</h2><span class="sub">层判断 &gt; 技能数量</span></div>
+  <p>这次整理最大的感受是：Skill 数量不是关键，先判断它负责哪一层更重要。</p><p>页面做得好看，不会自动修正错误指标；图表画得完整，也不能自动证明业务根因；image-to-code 能还原参考图，但不能替你判断信息结构是否合理。</p>
+</section>
+
+<section id="s5">
+  <div class="sechead"><span class="no">04</span><h2>盘点之后：工程 Skill</h2><span class="sub">data-report-engineering</span></div>
+  <h3>为什么要做这个 Skill</h3><p>盘点解决了"谁负责什么"，但真正干活时还有三个坑，都是实际踩过的：</p><p class="num">· 18 个技能在手，选择困难：每次做报告都在纠结用哪几个，组合不稳定，产出质量飘。</p><p class="num">· 跳过确认直接动手：风格、密度、尺寸没问清就开写，返工率高。</p><p class="num">· 制作前该问的问题没有清单化：问漏一两个（比如要不要打印、单文件还是允许 CDN），成品就差一口气。</p><p>于是把「分工 + 确认 + 流程」固化成了一个工程类 Skill：data-report-engineering（数据汇报工程）。</p><h3>它能做什么</h3><p>这个 Skill 本身不画图、不写页面，它是调度规则，管住从需求到交付的全链路：</p><div class="tw"><table><thead><tr><th>能力</th><th>说明</th></tr></thead><tbody><tr><td>执行前确认门（核心纪律）</td><td>写任何代码前必须确认四组信息：目标与形态、内容规则、视觉与技术、本次使用哪几层；确认后才调用对应层的技能，禁止跳过确认直接动手</td></tr><tr><td>制作前问题清单</td><td>7 个维度 30+ 问（目标范围/内容素材/视觉设计/技术约束/交互功能/交付验收/层选择），按需取用，其中层选择必问</td></tr><tr><td>场景配方</td><td>滚动式交互报告、PPT 式翻页演讲版、钉钉在线表格、GitHub Pages 部署——四种场景的现成做法（骨架、色板、交互、部署）</td></tr><tr><td>自动校验</td><td>占位符残留 = 0、HTML 标签配对、关键数字与源数据一致、JS 语法检查、零外部依赖核验</td></tr><tr><td>多版本管理</td><td>同一数据产出「交互版 / 演讲版 / 钉钉表格」多个版本，由同一套脚本生成，数据更新后重跑即全部同步</td></tr></tbody></table></div><h3>使用效果</h3><p>一次确认（本次用第 1 层 + 第 3 层，还是第 1 层 + 第 5 层），换来的是：风格不再飘、数字可核对、演讲版与交互版数据永远同源、交付附带校验结果和更新方式。</p><div class="shots"><figure class="shot"><div class="ph">在线文档截图（image.png，748×259）</div></figure></div><div class="shots"><figure class="shot"><div class="ph">在线文档截图（image.png，748×255）</div></figure></div><div class="links"><a href="https://elowynr.github.io/01/sbsd-report.html#s1" target="_blank" rel="noopener">🔗 SBSD投放与策略综合报告 · 2026年4–9月</a></div><p>SBSD投放与策略综合报告 · 2026年4–9月</p><div class="links"><a href="https://elowynr.github.io/01/sbsd-deck.html#1" target="_blank" rel="noopener">🔗 SBSD投放与策略综合报告 · 演讲版</a></div><p>SBSD投放与策略综合报告 · 演讲版，可直接在网页段完成修改，类似传统ppt</p>
+</section>
+
+<section id="s6">
+  <div class="sechead"><span class="no">05</span><h2>一句话总结</h2><span class="sub">—</span></div>
+  <blockquote>技能多少不重要。层判断 + 确认纪律 + 校验流程，才是数据汇报的工程化。</blockquote>
+</section>
+
+<div class="foot">源：钉钉在线文档《数据汇报相关 HTML Skill 盘点》 · 生成器：_gen_html.py · 单文件零依赖，双击即开<br>更新方式：源文档修改后重跑 _parse_doc.py 与 _gen_html.py 即可同步</div>
+</main>
+<script>
+(function(){
+  // 阅读进度
+  var prog = document.getElementById('prog');
+  function up(){
+    var h = document.documentElement;
+    var p = h.scrollTop / (h.scrollHeight - h.clientHeight) * 100;
+    prog.style.width = Math.min(100, Math.max(0, p)) + '%';
+  }
+  document.addEventListener('scroll', up, {passive:true}); up();
+
+  // 层卡片展开
+  document.querySelectorAll('.lc-head').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var card = btn.closest('.layer-card');
+      var open = card.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  });
+
+  // 条形图生长
+  var bars = document.querySelectorAll('.hbar i');
+  var done = false;
+  function grow(){
+    if (done) return; done = true;
+    bars.forEach(function(b){ b.style.width = b.getAttribute('data-w') || b.style.width; });
+  }
+  bars.forEach(function(b){ b.setAttribute('data-w', b.style.width); b.style.width = '0'; });
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting) grow(); }); }, {threshold:.2});
+    var bar = document.querySelector('.hbar'); if (bar) io.observe(bar);
+  } else { setTimeout(grow, 300); }
+
+  // 场景组合点击高亮
+  document.querySelectorAll('.combo').forEach(function(c){
+    c.addEventListener('click', function(){
+      document.querySelectorAll('.combo').forEach(function(x){ x.classList.remove('hl'); });
+      c.classList.add('hl');
+    });
+  });
+
+  // 导航高亮
+  var links = document.querySelectorAll('#bar nav a');
+  var secs = document.querySelectorAll('main section');
+  function navUp(){
+    var y = window.scrollY + 80, cur = null;
+    secs.forEach(function(s){ if (s.offsetTop <= y) cur = s.id; });
+    links.forEach(function(a){ a.classList.toggle('act', a.getAttribute('href') === '#' + cur); });
+  }
+  document.addEventListener('scroll', navUp, {passive:true}); navUp();
+})();
+</script>
+</body>
+</html>
